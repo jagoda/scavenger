@@ -1,0 +1,38 @@
+{
+  "name": "scavenger",
+  "version": "0.0.0",
+  "description": "A tool for tracking open source project activity.",
+  "main": "lib/",
+  "scripts": {
+    "coverage": "gulp && xdg-open coverage/lcov-report/index.html || open coverage/lcov-report/index.html",
+    "postinstall": "bower install",
+    "start": "node lib/server.js",
+    "test": "gulp"
+  },
+  "author": "Jeffrey Jagoda <jeffrey.jagoda@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "apparition": "^1.0.0",
+    "chai": "^1.9.2",
+    "gulp": "^3.8.7",
+    "gulp-istanbul": "^0.6.0",
+    "gulp-istanbul-enforcer": "^1.0.3",
+    "gulp-jscs": "^1.1.0",
+    "gulp-jshint": "^1.8.4",
+    "gulp-mocha": "^1.1.1",
+    "jshint-stylish": "^0.4.0",
+    "mocha": "^2.0.1",
+    "sinon": "^1.14.1",
+    "stream-consume": "^0.1.0",
+    "zombie": "^3.1.0"
+  },
+  "dependencies": {
+    "bluebird": "^2.6.4",
+    "bower": "^1.3.12",
+    "good": "^5.1.2",
+    "good-console": "^4.1.0",
+    "handlebars": "^3.0.1",
+    "hapi": "^8.4.0",
+    "lodash": "^2.4.1"
+  }
+}
