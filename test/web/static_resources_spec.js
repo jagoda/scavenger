@@ -38,4 +38,16 @@ describe("The static resources", function () {
 			expect(response.statusCode, "jquery").to.equal(200);
 		});
 	});
+
+	it("include the scavenger stylesheet", function () {
+		var stylesheet = new Request(
+			"get",
+			"/static/css/scavenger.css"
+		);
+
+		return stylesheet.inject(Scavenger)
+		.then(function (response) {
+			expect(response.statusCode, "stylesheet").to.equal(200);
+		});
+	});
 });

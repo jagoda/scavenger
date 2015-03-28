@@ -6,10 +6,22 @@ var URL     = require("./url");
 var expect = require("chai").expect;
 
 describe("The layout helper", function () {
-	var browser = new Browser();
+	var browser;
+
+	before(function () {
+		browser = new Browser();
+	});
+
+	after(function () {
+		browser.destroy();
+	});
 
 	describe("detecting a navigation bar", function () {
 		var fixture = URL.fixture("navbar.html");
+
+		before(function () {
+			return browser.visit(fixture);
+		});
 
 		describe("on a page with a valid navigation bar", function () {
 			before(function () {
@@ -71,6 +83,67 @@ describe("The layout helper", function () {
 
 			it("fails", function () {
 				expect(Layout.verifyHeader.bind(Layout, browser)).to.throw();
+			});
+		});
+	});
+
+	describe("detecting a footer", function () {
+		var fixture = URL.fixture("footer.html");
+
+		describe("on a page with a valid footer", function () {
+			before(function () {
+				return browser.visit(fixture);
+			});
+
+			it("succeeds", function () {
+				Layout.verifyFooter(browser);
+			});
+		});
+
+		describe("with an invalid structure", function () {
+			before(function () {
+				return browser.visit(fixture);
+			});
+
+			it("fails", function () {
+				var elements = browser.query("body").querySelectorAll("*");
+
+				// Skip first DIV.
+				for (var i = 1; i < elements.length; i += 1) {
+					var current = elements.item(i);
+					var parent  = current.parentNode;
+					parent.removeChild(current);
+					expect(Layout.verifyFooter.bind(Layout, browser), current.nodeName).to.throw();
+					parent.appendChild(current);
+				}
+			});
+		});
+
+		describe("with invalid reset link text", function () {
+			before(function () {
+				return browser.visit(fixture)
+				.then(function () {
+					var reset = browser.query("div:last-of-type span.navbar-right a");
+					reset.textContent = "foo";
+				});
+			});
+
+			it("fails", function () {
+				expect(Layout.verifyFooter.bind(Layout, browser)).to.throw();
+			});
+		});
+
+		describe("with invalid reset link href", function () {
+			before(function () {
+				return browser.visit(fixture)
+				.then(function () {
+					var reset = browser.query("div:last-of-type span.navbar-right a");
+					reset.href = "foo";
+				});
+			});
+
+			it("fails", function () {
+				expect(Layout.verifyFooter.bind(Layout, browser)).to.throw();
 			});
 		});
 	});

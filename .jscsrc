@@ -62,7 +62,7 @@
 		"numeric", "boolean", "binary", "string"
 	],
 
-	"requireCamelCaseOrUpperCaseIdentifiers" : true,
+	"requireCamelCaseOrUpperCaseIdentifiers" : "ignoreProperties",
 
 	"disallowKeywords" : [
 		"do", "with"

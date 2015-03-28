@@ -9,7 +9,7 @@ Bluebird.promisifyAll(Hapi);
 
 describe("The web plugin", function () {
 	it("is a Hapi plugin", function () {
-		expect(Web, "plugin")
+		expect(Web)
 		.to.have.property("register").that.is.a("function")
 		.that.has.property("attributes")
 		.that.has.property("name", "web");

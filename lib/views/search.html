@@ -1,0 +1,26 @@
+{{> header }}
+<div class="well">
+	{{> search }}
+</div>
+
+{{#if projects }}
+<table class="table">
+	<thead>
+		<tr>
+			<th>Project</th>
+			<th>Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{# projects }}
+		<tr>
+			<td>{{ owner }}/{{ name }}</td>
+			<td>{{ description }}</td>
+		</tr>
+		{{/ projects }}
+	</tbody>
+</table>
+{{else}}
+<p>No projects found.</p>
+{{/if}}
+{{> footer }}
