@@ -12,7 +12,7 @@ function generateInteger () {
 function generateString () {
 	var length = 15;
 	var buffer = new Buffer(length);
-	var max    = 123;    // End of ASCII alphabet.
+	var max    = 122;    // End of ASCII alphabet.
 	var min    = 97;     // Beginning of ASCII alphabet.
 
 	for (var offset = 0; offset < length; offset += 1) {

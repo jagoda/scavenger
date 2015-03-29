@@ -1,0 +1,19 @@
+{{> header }}
+	<h2>{{ project.owner }}/<a href="https://github.com/{{ project.owner }}/{{ project.name }}">{{ project.name }} <span class="mega-octicon octicon-mark-github"></span></a></h2>
+	<p class="text-muted">{{ project.description }}</p>
+
+	<h3>Overview</h3>
+	<div class="table">
+		<div class="row">
+			<div class="col-md-4">
+				<span class="octicon octicon-star"></span> <strong>Stars:</strong> {{ project.stargazers }}
+			</div>
+			<div class="col-md-4">
+				<span class="octicon octicon-repo-forked"></span> <strong>Forks:</strong> {{ project.forks }}
+			</div>
+			<div class="col-md-4">
+				<span class="octicon octicon-eye"></span> <strong>Watchers:</strong> {{ project.watchers }}
+			</div>
+		</div>
+	</div>
+{{> footer }}

@@ -17,3 +17,7 @@ URL.file = function (path) {
 URL.fixture = function (name) {
 	return this.file(Path.join(__dirname, "fixtures", name));
 };
+
+URL.project = function (owner, name) {
+	return [ "", owner, name ].join("/");
+};

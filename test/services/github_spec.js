@@ -1,7 +1,6 @@
 "use strict";
 var GitHub       = require("../../lib/services/github");
 var GitHubHelper = require("../helpers/github");
-var Nock         = require("nock");
 var Project      = require("../../lib/models/project");
 
 var expect = require("chai").expect;
@@ -10,14 +9,6 @@ describe("The GitHub service", function () {
 	var github = new GitHub();
 
 	var serverError = /unexpected server error \(500\)/i;
-
-	before(function () {
-		Nock.disableNetConnect();
-	});
-
-	after(function () {
-		Nock.enableNetConnect();
-	});
 
 	describe("getting a project", function () {
 		var payload = GitHubHelper.project.generate();

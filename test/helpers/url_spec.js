@@ -26,4 +26,10 @@ describe("The URL helper", function () {
 			expect(URL.fixture("file.html"), "URL").to.equal(URL.file(fixture));
 		});
 	});
+
+	describe("generating a project URL", function () {
+		it("returns a path absolute URL", function () {
+			expect(URL.project("foo", "bar")).to.equal("/foo/bar");
+		});
+	});
 });

@@ -147,4 +147,42 @@ describe("The layout helper", function () {
 			});
 		});
 	});
+
+	describe("detecting an error page", function () {
+		describe("when on an error page", function () {
+			before(function (done) {
+				browser.visit("/foo", function () {
+					// Ignore errors.
+					done();
+				});
+			});
+
+			it("succeeds", function () {
+				Layout.errorPage(browser, 404);
+			});
+		});
+
+		describe("when on a different error page", function () {
+			before(function (done) {
+				browser.visit("/foo", function () {
+					// Ignore errors.
+					done();
+				});
+			});
+
+			it("fails", function () {
+				expect(Layout.errorPage.bind(Layout, browser, 500)).to.throw();
+			});
+		});
+
+		describe("when on a regular page", function () {
+			before(function () {
+				return browser.visit("/");
+			});
+
+			it("fails", function () {
+				expect(Layout.errorPage.bind(Layout, browser, 404)).to.throw();
+			});
+		});
+	});
 });

@@ -77,11 +77,13 @@ describe("The search page", function () {
 			expect(rows, "rows").to.have.length(results.items.length);
 			for (var i = 0; i < rows.length; i += 1) {
 				var item        = rows.item(i);
-				var name        = item.querySelector("td:nth-of-type(1)");
+				var name        = item.querySelector("td:nth-of-type(1) a");
 				var description = item.querySelector("td:nth-of-type(2)");
 				expect(name, "name element").to.exist;
 				expect(name.textContent, "name text")
 				.to.equal(results.items[i].owner.login + "/" + results.items[i].name);
+				expect(name.getAttribute("href"), "name link")
+				.to.equal("/" + results.items[i].owner.login + "/" + results.items[i].name);
 				expect(description, "description element").to.exist;
 				expect(description.textContent, "description text")
 				.to.equal(results.items[i].description);
@@ -140,6 +142,37 @@ describe("The search page", function () {
 			var message = browser.query("p");
 			expect(message, "message element").to.exist;
 			expect(message.textContent, "message text").to.match(/no projects/i);
+		});
+	});
+
+	describe("navigating to a search result", function () {
+		var query   = "an arbitrary query";
+		var results = GitHub.search.generate(1);
+		var project = results.items[0];
+
+		before(function () {
+			var projectRequest = GitHub.project.nock(project).reply(200, project);
+			var searchRequest  = GitHub.search.nock(query).reply(200, results);
+
+			return browser.visit("/?q=" + encodeURIComponent(query))
+			.then(function () {
+				var link = browser.query("table tbody td a");
+				expect(link, "link element").to.exist;
+				return browser.pressButton(link);
+			})
+			.then(function () {
+				projectRequest.done();
+				searchRequest.done();
+			});
+		});
+
+		it("navigates to the project page", function () {
+			var fullName = project.owner.login + "/" + project.name;
+
+			browser.assert.url({
+				pathname : "/" + fullName
+			});
+			browser.assert.text("h2", fullName);
 		});
 	});
 });

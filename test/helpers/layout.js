@@ -1,7 +1,17 @@
 "use strict";
+var Http   = require("http");
 var Layout = module.exports;
 
 var expect = require("chai").expect;
+
+Layout.errorPage = function (browser, statusCode) {
+	var message = Http.STATUS_CODES[statusCode];
+	expect(browser.statusCode, "status").to.equal(statusCode);
+	Layout.verifyHeader(browser);
+	Layout.verifyFooter(browser);
+	expect(browser.text("title"), "title").to.equal(message + " - Scavenger");
+	expect(browser.text("h1"), "heading").to.equal(message);
+};
 
 Layout.verifyFooter = function (browser) {
 	var reset = browser.query("div.navbar:last-of-type span.navbar-text.navbar-right a");

@@ -18,32 +18,14 @@ describe("The error page", function () {
 
 	describe("for an invalid URL", function () {
 		before(function (done) {
-			return browser.visit("/foobar", function () {
+			browser.visit("/foobar", function () {
 				// Ignore errors.
 				done();
 			});
 		});
 
-		it("uses code 404", function () {
-			browser.assert.status(404);
-		});
-
-		it("has a title", function () {
-			expect(browser.text("title"), "title").to.equal("Not Found - Scavenger");
-		});
-
-		it("has a navigation bar", function () {
-			Layout.verifyHeader(browser);
-		});
-
-		it("has a footer", function () {
-			Layout.verifyFooter(browser);
-		});
-
-		it("has a heading", function () {
-			var heading = browser.query("h1");
-			expect(heading, "heading element").to.exist;
-			expect(heading.textContent, "heading text").to.equal("Not Found");
+		it("is an error page", function () {
+			Layout.errorPage(browser, 404);
 		});
 
 		it("has an error message", function () {
@@ -59,7 +41,7 @@ describe("The error page", function () {
 
 			request = GitHub.search.nock(query).reply(500);
 
-			return browser.visit("/?q=" + encodeURIComponent(query), function () {
+			browser.visit("/?q=" + encodeURIComponent(query), function () {
 				// Ignore errors.
 				done();
 			});
@@ -69,26 +51,8 @@ describe("The error page", function () {
 			request.done();
 		});
 
-		it("uses code 500", function () {
-			browser.assert.status(500);
-		});
-
-		it("has a title", function () {
-			expect(browser.text("title"), "title").to.equal("Internal Server Error - Scavenger");
-		});
-
-		it("has a navigation bar", function () {
-			Layout.verifyHeader(browser);
-		});
-
-		it("has a footer", function () {
-			Layout.verifyFooter(browser);
-		});
-
-		it("has a heading", function () {
-			var heading = browser.query("h1");
-			expect(heading, "heading element").to.exist;
-			expect(heading.textContent, "heading text").to.equal("Internal Server Error");
+		it("is an error page", function () {
+			Layout.errorPage(browser, 500);
 		});
 
 		it("has an error message", function () {

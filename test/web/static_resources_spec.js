@@ -39,6 +39,18 @@ describe("The static resources", function () {
 		});
 	});
 
+	it("include GitHub octicons", function () {
+		var octicons = new Request(
+			"get",
+			"/static/bower_components/octicons/octicons/octicons.css"
+		);
+
+		return octicons.inject(Scavenger)
+		.then(function (response) {
+			expect(response.statusCode, "octicons").to.equal(200);
+		});
+	});
+
 	it("include the scavenger stylesheet", function () {
 		var stylesheet = new Request(
 			"get",
