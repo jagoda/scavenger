@@ -25,4 +25,9 @@ Layout.verifyHeader = function (browser) {
 	expect(brand, "brand element").to.exist;
 	expect(browser.text(brand), "brand text").to.equal("Scavenger");
 	expect(brand.getAttribute("href"), "brand href").to.equal("/");
+
+	var search = browser.query("nav>div.container>form.navbar-form.pull-right>input.form-control");
+	expect(search, "search element").to.exist;
+	expect(search.getAttribute("type"), "search type").to.equal("text");
+	expect(search.getAttribute("placeholder"), "search placeholder").to.equal("Search");
 };
