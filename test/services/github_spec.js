@@ -1,4 +1,5 @@
 "use strict";
+var Cache        = require("../../lib/services/cache");
 var GitHub       = require("../../lib/services/github");
 var GitHubHelper = require("../helpers/github");
 var Project      = require("../../lib/models/project");
@@ -6,9 +7,20 @@ var Project      = require("../../lib/models/project");
 var expect = require("chai").expect;
 
 describe("The GitHub service", function () {
-	var github = new GitHub();
+	var cache       = new Cache();
+	var github      = new GitHub(cache);
 
 	var serverError = /unexpected server error \(500\)/i;
+
+	before(function () {
+		// Need to start the cache for API compliance but the cache is disabled
+		// by the setup script.
+		return cache.start();
+	});
+
+	after(function () {
+		cache.stop();
+	});
 
 	describe("getting a project", function () {
 		var payload = GitHubHelper.project.generate();

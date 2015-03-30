@@ -31,6 +31,8 @@
     "bluebird": "^2.6.4",
     "boom": "^2.6.1",
     "bower": "^1.3.12",
+    "catbox": "^4.2.2",
+    "catbox-memory": "git+https://github.com/jagoda/catbox-memory.git#fix-clean-timers",
     "good": "^5.1.2",
     "good-console": "^4.1.0",
     "handlebars": "^3.0.1",
