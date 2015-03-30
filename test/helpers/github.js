@@ -6,7 +6,7 @@ var GitHub = module.exports;
 var api = "https://api.github.com";
 
 function generateInteger () {
-	return Math.round(Math.random() * 100);
+	return Math.round(Math.random() * 10000) + 1000;
 }
 
 function generateString () {

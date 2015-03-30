@@ -3,15 +3,17 @@ var Bluebird = require("bluebird");
 var Browser  = require("zombie");
 var GitHub   = require("../helpers/github");
 var Layout   = require("../helpers/layout");
+var Numeral  = require("numeral");
 var URL      = require("../helpers/url");
 var Util     = require("util");
 
 var expect = require("chai").expect;
 
 describe("A project page", function () {
-	var project    = GitHub.project.generate();
-	var projectUrl = URL.project(project.owner.login, project.name);
-	var githubUrl  = Util.format("https://github.com/%s/%s", project.owner.login, project.name);
+	var project      = GitHub.project.generate();
+	var projectUrl   = URL.project(project.owner.login, project.name);
+	var githubUrl    = Util.format("https://github.com/%s/%s", project.owner.login, project.name);
+	var numberFormat = "0,0";
 
 	var browser;
 
@@ -78,8 +80,9 @@ describe("A project page", function () {
 
 			var rows = [
 				[
-					"Stars: " + project.stargazers_count, "Forks: " + project.forks_count,
-					"Watchers: " + project.watchers_count
+					"Stars: " + new Numeral(project.stargazers_count).format(numberFormat),
+					"Forks: " + new Numeral(project.forks_count).format(numberFormat),
+					"Watchers: " + new Numeral(project.watchers_count).format(numberFormat)
 				]
 			];
 
@@ -92,7 +95,7 @@ describe("A project page", function () {
 				for (var j = 0; j < rows[i].length; j += 1) {
 					var element = cells.item(j);
 					expect(element.textContent.trim(), i + "," + j)
-					.to.equal(rows[i][j].toString());
+					.to.equal(rows[i][j]);
 				}
 			}
 		});
