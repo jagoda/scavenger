@@ -164,6 +164,30 @@ describe("The cache service", function () {
 				});
 			});
 		});
+
+		describe("specifying additional headers", function () {
+			var cache = new Cache();
+
+			before(function () {
+				return cache.start();
+			});
+
+			after(function () {
+				cache.stop();
+			});
+
+			it("sends the headers with the request", function () {
+				var request = new Nock("http://example.com")
+				.matchHeader("x-custom-header", "foo")
+				.get("/")
+				.reply(204);
+
+				return cache.get("http://example.com/", { "x-custom-header" : "foo" })
+				.finally(function () {
+					request.done();
+				});
+			});
+		});
 	});
 
 	describe("when caching is disabled", function () {

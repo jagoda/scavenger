@@ -1,5 +1,6 @@
 "use strict";
 var Cache        = require("../../lib/services/cache");
+var Environment  = require("apparition").Environment;
 var GitHub       = require("../../lib/services/github");
 var GitHubHelper = require("../helpers/github");
 var Project      = require("../../lib/models/project");
@@ -7,8 +8,8 @@ var Project      = require("../../lib/models/project");
 var expect = require("chai").expect;
 
 describe("The GitHub service", function () {
-	var cache       = new Cache();
-	var github      = new GitHub(cache);
+	var cache  = new Cache();
+	var github = new GitHub(cache);
 
 	var serverError = /unexpected server error \(500\)/i;
 
@@ -118,6 +119,36 @@ describe("The GitHub service", function () {
 				expect(result).to.have.property("message");
 			});
 		});
+
+		describe("when configured with credentials", function () {
+			var environment = new Environment();
+			var token       = "atokenvalue";
+
+			var request;
+
+			before(function () {
+				environment.set("github_token", token);
+
+				var credentials = "Basic " +
+					new Buffer(token + ":x-oauth-basic").toString("base64");
+
+				var project = GitHubHelper.project.generate();
+
+				request = GitHubHelper.project.nock(project)
+				.matchHeader("authorization", credentials)
+				.reply(200, project);
+
+				return github.project(project.owner.login, project.name);
+			});
+
+			after(function () {
+				environment.restore();
+			});
+
+			it("includes the credentials on the request", function () {
+				request.done();
+			});
+		});
 	});
 
 	describe("finding projects", function () {
@@ -211,6 +242,36 @@ describe("The GitHub service", function () {
 				expect(result).to.have.property("isBoom", true);
 				expect(result.output.statusCode).to.equal(500);
 				expect(result).to.have.property("message");
+			});
+		});
+
+		describe("when configured with credentials", function () {
+			var environment = new Environment();
+			var token       = "agithubtoken";
+
+			var request;
+
+			before(function () {
+				environment.set("github_token", token);
+
+				var credentials = "Basic " +
+					new Buffer(token + ":x-oauth-basic").toString("base64");
+
+				var project = GitHubHelper.project.generate();
+
+				request = GitHubHelper.project.nock(project)
+				.matchHeader("authorization", credentials)
+				.reply(200, project);
+
+				return github.project(project.owner.login, project.name);
+			});
+
+			after(function () {
+				environment.restore();
+			});
+
+			it("includes the credentials on the request", function () {
+				request.done();
 			});
 		});
 	});
