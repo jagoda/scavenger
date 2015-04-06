@@ -17,15 +17,21 @@ describe("The search page", function () {
 	});
 
 	describe("with results", function () {
-		var query   = "a query";
-		var results = GitHub.search.generate(5);
+		var query = "a query";
+		var results;
 
 		before(function () {
-			var request = GitHub.search.nock(query).reply(200, results);
+			results = [
+				new GitHub.Project().succeed(),
+				new GitHub.Project().succeed(),
+				new GitHub.Project().succeed()
+			];
+
+			var search = new GitHub.Search(results, query).succeed();
 
 			return browser.visit("/?q=" + encodeURIComponent(query))
 			.then(function () {
-				request.done();
+				search.done();
 			});
 		});
 
@@ -74,33 +80,32 @@ describe("The search page", function () {
 			.to.equal("Description");
 
 			var rows = table.querySelectorAll("tbody tr");
-			expect(rows, "rows").to.have.length(results.items.length);
+			expect(rows, "rows").to.have.length(results.length);
 			for (var i = 0; i < rows.length; i += 1) {
 				var item        = rows.item(i);
 				var name        = item.querySelector("td:nth-of-type(1) a");
 				var description = item.querySelector("td:nth-of-type(2)");
 				expect(name, "name element").to.exist;
 				expect(name.textContent, "name text")
-				.to.equal(results.items[i].owner.login + "/" + results.items[i].name);
+				.to.equal(results[i].payload.owner.login + "/" + results[i].payload.name);
 				expect(name.getAttribute("href"), "name link")
-				.to.equal("/" + results.items[i].owner.login + "/" + results.items[i].name);
+				.to.equal("/" + results[i].payload.owner.login + "/" + results[i].payload.name);
 				expect(description, "description element").to.exist;
 				expect(description.textContent, "description text")
-				.to.equal(results.items[i].description);
+				.to.equal(results[i].payload.description);
 			}
 		});
 	});
 
 	describe("without results", function () {
-		var query   = "another query";
-		var results = GitHub.search.generate(0);
+		var query = "another query";
 
 		before(function () {
-			var request = GitHub.search.nock(query).reply(200, results);
+			var search = new GitHub.Search([], query).succeed();
 
 			return browser.visit("/?q=" + encodeURIComponent(query))
 			.then(function () {
-				request.done();
+				search.done();
 			});
 		});
 
@@ -146,13 +151,12 @@ describe("The search page", function () {
 	});
 
 	describe("navigating to a search result", function () {
-		var query   = "an arbitrary query";
-		var results = GitHub.search.generate(1);
-		var project = results.items[0];
+		var query = "an arbitrary query";
+		var project;
 
 		before(function () {
-			var projectRequest = GitHub.project.nock(project).reply(200, project);
-			var searchRequest  = GitHub.search.nock(query).reply(200, results);
+			project    = new GitHub.Project().succeed();
+			var search = new GitHub.Search([ project ], query).succeed();
 
 			return browser.visit("/?q=" + encodeURIComponent(query))
 			.then(function () {
@@ -161,13 +165,13 @@ describe("The search page", function () {
 				return browser.pressButton(link);
 			})
 			.then(function () {
-				projectRequest.done();
-				searchRequest.done();
+				project.done();
+				search.done();
 			});
 		});
 
 		it("navigates to the project page", function () {
-			var fullName = project.owner.login + "/" + project.name;
+			var fullName = project.payload.owner.login + "/" + project.payload.name;
 
 			browser.assert.url({
 				pathname : "/" + fullName

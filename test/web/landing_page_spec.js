@@ -63,9 +63,7 @@ describe("The landing page", function () {
 		var request;
 
 		before(function () {
-			var results = GitHub.search.generate(0);
-
-			request = GitHub.search.nock(query).reply(200, results);
+			request = new GitHub.Search([], query).succeed();
 
 			return browser
 			.fill("div.jumbotron form input", query)

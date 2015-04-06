@@ -1,5 +1,6 @@
 "use strict";
 var Nock = require("nock");
+var Util = require("util");
 
 var GitHub = module.exports;
 
@@ -23,46 +24,85 @@ function generateString () {
 	return buffer.toString();
 }
 
-GitHub.project = {
-	generate : function () {
-		return {
-			owner : {
-				login : generateString()
-			},
+function generateProjectPayload () {
+	return {
+		owner : {
+			login : generateString()
+		},
 
-			description       : generateString(),
-			forks_count       : generateInteger(),
-			language          : generateString(),
-			name              : generateString(),
-			private           : false,
-			stargazers_count  : generateInteger(),
-			subscribers_count : generateInteger()
-		};
-	},
+		description       : generateString(),
+		forks_count       : generateInteger(),
+		language          : generateString(),
+		name              : generateString(),
+		private           : false,
+		stargazers_count  : generateInteger(),
+		subscribers_count : generateInteger()
+	};
+}
 
-	nock : function (project) {
-		return new Nock(api)
-		.matchHeader("user-agent", "request")
-		.get([ "", "repos", project.owner.login, project.name ].join("/"));
+GitHub.Project = function (token) {
+	var payload = generateProjectPayload();
+
+	var nock = new Nock(api)
+	.matchHeader("user-agent", "request")
+	.get([ "", "repos", payload.owner.login, payload.name ].join("/"));
+
+	if (token) {
+		nock.matchHeader("authorization", "Basic " +
+			new Buffer(token + ":x-oauth-basic").toString("base64"));
 	}
+
+	this.payload = payload;
+
+	this.done = function () {
+		nock.done();
+		return this;
+	};
+
+	this.fail = function (code) {
+		nock = nock.reply(code || 404);
+		return this;
+	};
+
+	this.githubUrl = function () {
+		return Util.format("https://github.com/%s/%s", payload.owner.login, payload.name);
+	};
+
+	this.succeed = function () {
+		nock = nock.reply(200, payload);
+		return this;
+	};
+
+	this.url = function () {
+		return Util.format("/%s/%s", payload.owner.login, payload.name);
+	};
 };
 
-GitHub.search = {
-	generate : function (count) {
-		var payload = {
-			items : []
-		};
+GitHub.Search = function (projects, query) {
+	var payload = {
+		items : projects.map(function (project) {
+			return project.payload;
+		})
+	};
 
-		for (var i = 0; i < count; i += 1) {
-			payload.items.push(GitHub.project.generate());
-		}
+	var nock = new Nock(api)
+	.matchHeader("user-agent", "request")
+	.get("/search/repositories?q=" + encodeURIComponent(query));
 
-		return payload;
-	},
+	this.payload = payload;
 
-	nock : function (query) {
-		return new Nock(api)
-		.matchHeader("user-agent", "request")
-		.get("/search/repositories?q=" + encodeURIComponent(query));
-	}
+	this.done = function () {
+		nock.done();
+		return this;
+	};
+
+	this.fail = function (code) {
+		nock = nock.reply(code || 404);
+		return this;
+	};
+
+	this.succeed = function () {
+		nock = nock.reply(200, payload);
+		return this;
+	};
 };

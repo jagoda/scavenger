@@ -24,32 +24,31 @@ describe("The GitHub service", function () {
 	});
 
 	describe("getting a project", function () {
-		var payload = GitHubHelper.project.generate();
-
 		describe("that exists", function () {
+			var project;
 			var result;
 
 			before(function () {
-				var request = GitHubHelper.project.nock(payload).reply(200, payload);
+				project = new GitHubHelper.Project().succeed();
 
-				return github.project(payload.owner.login, payload.name)
+				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (response) {
 					result = response;
 				})
 				.finally(function () {
-					request.done();
+					project.done();
 				});
 			});
 
 			it("describes the project", function () {
 				expect(result).to.be.an.instanceOf(Project);
-				expect(result).to.have.property("description", payload.description);
-				expect(result).to.have.property("forks", payload.forks_count);
-				expect(result).to.have.property("language", payload.language);
-				expect(result).to.have.property("name", payload.name);
-				expect(result).to.have.property("owner", payload.owner.login);
-				expect(result).to.have.property("stargazers", payload.stargazers_count);
-				expect(result).to.have.property("watchers", payload.subscribers_count);
+				expect(result).to.have.property("description", project.payload.description);
+				expect(result).to.have.property("forks", project.payload.forks_count);
+				expect(result).to.have.property("language", project.payload.language);
+				expect(result).to.have.property("name", project.payload.name);
+				expect(result).to.have.property("owner", project.payload.owner.login);
+				expect(result).to.have.property("stargazers", project.payload.stargazers_count);
+				expect(result).to.have.property("watchers", project.payload.subscribers_count);
 			});
 		});
 
@@ -57,14 +56,14 @@ describe("The GitHub service", function () {
 			var result;
 
 			before(function () {
-				var request = GitHubHelper.project.nock(payload).reply(404);
+				var project = new GitHubHelper.Project().fail();
 
-				return github.project(payload.owner.login, payload.name)
+				return github.project(project.payload.owner.login, project.payload.name)
 				.catch(function (error) {
 					result = error;
 				})
 				.finally(function () {
-					request.done();
+					project.done();
 				});
 			});
 
@@ -81,14 +80,14 @@ describe("The GitHub service", function () {
 			var result;
 
 			before(function () {
-				var request = GitHubHelper.project.nock(payload).reply(500);
+				var project = new GitHubHelper.Project().fail(500);
 
-				return github.project(payload.owner.login, payload.name)
+				return github.project(project.payload.owner.login, project.payload.name)
 				.catch(function (error) {
 					result = error;
 				})
 				.finally(function () {
-					request.done();
+					project.done();
 				});
 			});
 
@@ -106,7 +105,7 @@ describe("The GitHub service", function () {
 
 			before(function () {
 				// Nock will block the network request.
-				return github.project(payload.owner.login, payload.name)
+				return github.project("foo", "bar")
 				.catch(function (error) {
 					result = error;
 				});
@@ -123,22 +122,12 @@ describe("The GitHub service", function () {
 		describe("when configured with credentials", function () {
 			var environment = new Environment();
 			var token       = "atokenvalue";
-
-			var request;
+			var project;
 
 			before(function () {
 				environment.set("github_token", token);
-
-				var credentials = "Basic " +
-					new Buffer(token + ":x-oauth-basic").toString("base64");
-
-				var project = GitHubHelper.project.generate();
-
-				request = GitHubHelper.project.nock(project)
-				.matchHeader("authorization", credentials)
-				.reply(200, project);
-
-				return github.project(project.owner.login, project.name);
+				project = new GitHubHelper.Project(token).succeed();
+				return github.project(project.payload.owner.login, project.payload.name);
 			});
 
 			after(function () {
@@ -146,7 +135,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("includes the credentials on the request", function () {
-				request.done();
+				project.done();
 			});
 		});
 	});
@@ -155,43 +144,47 @@ describe("The GitHub service", function () {
 		var query = "some query";
 
 		describe("with matching results", function () {
-			var payload = GitHubHelper.search.generate(2);
+			var projects;
 			var results;
 
 			before(function () {
-				var request = GitHubHelper.search.nock(query).reply(200, payload);
+				projects = [
+					new GitHubHelper.Project().succeed(),
+					new GitHubHelper.Project().succeed()
+				];
+
+				var search = new GitHubHelper.Search(projects, query).succeed();
 
 				return github.findProjects(query)
 				.then(function (response) {
 					results = response;
 				})
 				.finally(function () {
-					request.done();
+					search.done();
 				});
 			});
 
 			it("returns a list of projects", function () {
-				expect(results).to.have.length(2);
+				expect(results).to.have.length(projects.length);
 				results.forEach(function (result, index) {
 					expect(result, index).to.be.an.instanceOf(Project);
-					expect(result, index).to.have.property("name", payload.items[index].name);
+					expect(result, index).to.have.property("name", projects[index].payload.name);
 				});
 			});
 		});
 
 		describe("without matching results", function () {
-			var payload = GitHubHelper.search.generate(0);
 			var result;
 
 			before(function () {
-				var request = GitHubHelper.search.nock(query).reply(200, payload);
+				var search = new GitHubHelper.Search([], query).succeed();
 
 				return github.findProjects(query)
 				.then(function (response) {
 					result = response;
 				})
 				.finally(function () {
-					request.done();
+					search.done();
 				});
 			});
 
@@ -204,14 +197,14 @@ describe("The GitHub service", function () {
 			var result;
 
 			before(function () {
-				var request = GitHubHelper.search.nock(query).reply(500);
+				var search = new GitHubHelper.Search([], query).fail(500);
 
 				return github.findProjects(query)
 				.catch(function (error) {
 					result = error;
 				})
 				.finally(function () {
-					request.done();
+					search.done();
 				});
 			});
 
@@ -245,23 +238,16 @@ describe("The GitHub service", function () {
 
 		describe("when configured with credentials", function () {
 			var environment = new Environment();
+			var query       = "foo";
 			var token       = "agithubtoken";
-
-			var request;
+			var project;
+			var search;
 
 			before(function () {
 				environment.set("github_token", token);
-
-				var credentials = "Basic " +
-					new Buffer(token + ":x-oauth-basic").toString("base64");
-
-				var project = GitHubHelper.project.generate();
-
-				request = GitHubHelper.project.nock(project)
-				.matchHeader("authorization", credentials)
-				.reply(200, project);
-
-				return github.project(project.owner.login, project.name);
+				project = new GitHubHelper.Project(token).succeed();
+				search  = new GitHubHelper.Search([ project ], query, token).succeed();
+				return github.findProjects(query);
 			});
 
 			after(function () {
@@ -269,7 +255,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("includes the credentials on the request", function () {
-				request.done();
+				search.done();
 			});
 		});
 	});

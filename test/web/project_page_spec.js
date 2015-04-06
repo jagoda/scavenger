@@ -4,17 +4,11 @@ var Browser  = require("zombie");
 var GitHub   = require("../helpers/github");
 var Layout   = require("../helpers/layout");
 var Numeral  = require("numeral");
-var URL      = require("../helpers/url");
-var Util     = require("util");
 
 var expect = require("chai").expect;
 
 describe("A project page", function () {
-	var project      = GitHub.project.generate();
-	var projectUrl   = URL.project(project.owner.login, project.name);
-	var githubUrl    = Util.format("https://github.com/%s/%s", project.owner.login, project.name);
 	var numberFormat = "0,0";
-
 	var browser;
 
 	before(function () {
@@ -26,17 +20,18 @@ describe("A project page", function () {
 	});
 
 	describe("for a project that exists", function () {
-		before(function () {
-			var request = GitHub.project.nock(project).reply(200, project);
+		var project;
 
-			return browser.visit(projectUrl)
+		before(function () {
+			project = new GitHub.Project().succeed();
+			return browser.visit(project.url())
 			.then(function () {
-				request.done();
+				project.done();
 			});
 		});
 
 		it("has a title", function () {
-			expect(browser.text("title"), "title").to.equal(project.name + " - Scavenger");
+			expect(browser.text("title"), "title").to.equal(project.payload.name + " - Scavenger");
 		});
 
 		it("has a navigation bar", function () {
@@ -51,23 +46,18 @@ describe("A project page", function () {
 			var heading = browser.query("h2");
 			expect(heading, "heading element").to.exist;
 			expect(heading.textContent.trim(), "heading text")
-			.to.equal(project.owner.login + "/" + project.name);
+			.to.equal(project.payload.owner.login + "/" + project.payload.name);
 
 			var projectLink = heading.querySelector("a:nth-of-type(1)");
-			var githubUrl   = Util.format(
-				"https://github.com/%s/%s",
-				project.owner.login,
-				project.name
-			);
 			expect(projectLink, "project element").to.exist;
-			expect(projectLink.getAttribute("href"), "project href").to.equal(githubUrl);
+			expect(projectLink.getAttribute("href"), "project href").to.equal(project.githubUrl());
 
 			var octicon = projectLink.querySelector("span.mega-octicon.octicon-mark-github");
 			expect(octicon, "GitHub icon").to.exist;
 		});
 
 		it("includes the project description", function () {
-			browser.assert.text("h2+p", project.description);
+			browser.assert.text("h2+p", project.payload.description);
 		});
 
 		it("has a table of statistics", function () {
@@ -80,9 +70,10 @@ describe("A project page", function () {
 
 			var rows = [
 				[
-					"Stars: " + new Numeral(project.stargazers_count).format(numberFormat),
-					"Forks: " + new Numeral(project.forks_count).format(numberFormat),
-					"Watchers: " + new Numeral(project.subscribers_count).format(numberFormat)
+					"Stars: " + new Numeral(project.payload.stargazers_count).format(numberFormat),
+					"Forks: " + new Numeral(project.payload.forks_count).format(numberFormat),
+					"Watchers: " + new Numeral(project.payload.subscribers_count)
+						.format(numberFormat)
 				]
 			];
 
@@ -102,20 +93,16 @@ describe("A project page", function () {
 	});
 
 	describe("for a project that does not exist", function () {
-		var request;
-
 		before(function () {
-			request = GitHub.project.nock(project).reply(404);
-
+			var project = new GitHub.Project().fail();
 			return Bluebird.fromNode(function (callback) {
-				browser.visit(projectUrl, callback);
+				browser.visit(project.url(), callback);
 			})
 			// Ignore errors.
-			.catch(function () {});
-		});
-
-		before(function () {
-			request.done();
+			.catch(function () {})
+			.then(function () {
+				project.done();
+			});
 		});
 
 		it("shows an error page", function () {
@@ -124,11 +111,13 @@ describe("A project page", function () {
 	});
 
 	describe("traversing the project link (name)", function () {
+		var project;
+
 		before(function () {
-			var request = GitHub.project.nock(project).reply(200, project);
-			return browser.visit(projectUrl)
+			project = new GitHub.Project().succeed();
+			return browser.visit(project.url())
 			.then(function () {
-				request.done();
+				project.done();
 				return Bluebird.fromNode(function (callback) {
 					browser.click("h2 a:nth-of-type(1)", callback);
 				})
@@ -138,7 +127,7 @@ describe("A project page", function () {
 		});
 
 		it("redirects to the GitHub project page", function () {
-			browser.assert.url(githubUrl);
+			browser.assert.url(project.githubUrl());
 		});
 	});
 });

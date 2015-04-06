@@ -32,11 +32,10 @@ describe("The navigation bar", function () {
 	});
 
 	describe("using the search bar", function () {
-		var query   = "a package";
-		var results = GitHub.search.generate(0);
+		var query = "a package";
 
 		before(function () {
-			var request = GitHub.search.nock(query).reply(200, results);
+			var search = new GitHub.Search([], query).succeed();
 
 			return Bluebird.fromNode(function (callback) {
 				browser.visit("/foo", callback);
@@ -50,7 +49,7 @@ describe("The navigation bar", function () {
 				return browser.fire("nav form", "submit");
 			})
 			.then(function () {
-				request.done();
+				search.done();
 			});
 		});
 

@@ -37,9 +37,9 @@ describe("The error page", function () {
 		var request;
 
 		before(function (done) {
-			var query   = "foo";
+			var query = "foo";
 
-			request = GitHub.search.nock(query).reply(500);
+			request = new GitHub.Search([], query).fail(500);
 
 			browser.visit("/?q=" + encodeURIComponent(query), function () {
 				// Ignore errors.
