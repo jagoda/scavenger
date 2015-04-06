@@ -155,8 +155,9 @@ describe("The search page", function () {
 		var project;
 
 		before(function () {
-			project    = new GitHub.Project().succeed();
-			var search = new GitHub.Search([ project ], query).succeed();
+			project          = new GitHub.Project().succeed();
+			var contributors = new GitHub.ContributorList(project, []).succeed();
+			var search       = new GitHub.Search([ project ], query).succeed();
 
 			return browser.visit("/?q=" + encodeURIComponent(query))
 			.then(function () {
@@ -165,6 +166,7 @@ describe("The search page", function () {
 				return browser.pressButton(link);
 			})
 			.then(function () {
+				contributors.done();
 				project.done();
 				search.done();
 			});

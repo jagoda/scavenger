@@ -5,13 +5,16 @@
 	<h3>Overview</h3>
 	<div class="table">
 		<div class="row">
-			<div class="col-md-4">
+			<div class="col-md-3">
 				<span class="octicon octicon-star"></span> <strong>Stars:</strong> {{# integer project.stargazers }}{{/ integer }}
 			</div>
-			<div class="col-md-4">
+			<div class="col-md-3">
 				<span class="octicon octicon-repo-forked"></span> <strong>Forks:</strong> {{# integer project.forks }}{{/ integer }}
 			</div>
-			<div class="col-md-4">
+			<div class="col-md-3">
+				<span class="octicon octicon-octoface"></span> <string>Contributors:</strong> {{# integer project.contributors }}{{/ integer }}
+			</div>
+			<div class="col-md-3">
 				<span class="octicon octicon-eye"></span> <strong>Watchers:</strong> {{# integer project.watchers }}{{/ integer }}
 			</div>
 		</div>
