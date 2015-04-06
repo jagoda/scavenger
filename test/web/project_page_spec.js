@@ -82,7 +82,7 @@ describe("A project page", function () {
 				[
 					"Stars: " + new Numeral(project.stargazers_count).format(numberFormat),
 					"Forks: " + new Numeral(project.forks_count).format(numberFormat),
-					"Watchers: " + new Numeral(project.watchers_count).format(numberFormat)
+					"Watchers: " + new Numeral(project.subscribers_count).format(numberFormat)
 				]
 			];
 

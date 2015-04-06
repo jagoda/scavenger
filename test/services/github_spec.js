@@ -49,7 +49,7 @@ describe("The GitHub service", function () {
 				expect(result).to.have.property("name", payload.name);
 				expect(result).to.have.property("owner", payload.owner.login);
 				expect(result).to.have.property("stargazers", payload.stargazers_count);
-				expect(result).to.have.property("watchers", payload.watchers_count);
+				expect(result).to.have.property("watchers", payload.subscribers_count);
 			});
 		});
 
@@ -156,7 +156,6 @@ describe("The GitHub service", function () {
 
 		describe("with matching results", function () {
 			var payload = GitHubHelper.search.generate(2);
-
 			var results;
 
 			before(function () {
@@ -182,7 +181,6 @@ describe("The GitHub service", function () {
 
 		describe("without matching results", function () {
 			var payload = GitHubHelper.search.generate(0);
-
 			var result;
 
 			before(function () {

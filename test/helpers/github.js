@@ -30,13 +30,13 @@ GitHub.project = {
 				login : generateString()
 			},
 
-			description      : generateString(),
-			forks_count      : generateInteger(),
-			language         : generateString(),
-			name             : generateString(),
-			private          : false,
-			stargazers_count : generateInteger(),
-			watchers_count   : generateInteger()
+			description       : generateString(),
+			forks_count       : generateInteger(),
+			language          : generateString(),
+			name              : generateString(),
+			private           : false,
+			stargazers_count  : generateInteger(),
+			subscribers_count : generateInteger()
 		};
 	},
 

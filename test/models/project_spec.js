@@ -39,7 +39,6 @@ describe("A project", function () {
 
 	describe("without a description", function () {
 		var newOptions = _.omit(options, "description");
-
 		var project;
 
 		before(function () {
@@ -53,7 +52,6 @@ describe("A project", function () {
 
 	describe("without a language", function () {
 		var newOptions = _.omit(options, "language");
-
 		var project;
 
 		before(function () {
@@ -62,6 +60,19 @@ describe("A project", function () {
 
 		it("has 'unknown' for the language value", function () {
 			expect(project).to.have.property("language", "unknown");
+		});
+	});
+
+	describe("without a watchers count", function () {
+		var newOptions = _.omit(options, "watchers");
+		var project;
+
+		before(function () {
+			project = new Project(newOptions);
+		});
+
+		it("has 0 for the watchers count", function () {
+			expect(project).to.have.property("watchers", 0);
 		});
 	});
 });
