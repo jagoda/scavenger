@@ -259,4 +259,93 @@ describe("The GitHub service", function () {
 			});
 		});
 	});
+
+	describe("counting a project's contributors", function () {
+		describe("without an error", function () {
+			var list;
+			var project;
+			var result;
+
+			before(function () {
+				project = new GitHubHelper.Project().succeed();
+				list    = new GitHubHelper.ContributorList(project, new Array(5)).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.contributorCount(project);
+				})
+				.then(function (count) {
+					result = count;
+				})
+				.finally(function () {
+					project.done();
+					list.done();
+				});
+			});
+
+			it("returns the number of contributors to the project", function () {
+				expect(result).to.equal(list.payload.length);
+			});
+		});
+
+		describe("failing to fetch the first page", function () {
+			var list;
+			var project;
+			var result;
+
+			before(function () {
+				project = new GitHubHelper.Project().succeed();
+				list    = new GitHubHelper.ContributorList(project, new Array(5)).fail();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.contributorCount(project);
+				})
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					project.done();
+					list.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.an.instanceOf(Error);
+				expect(result).to.have.property("isBoom", true);
+				expect(result.output.statusCode).to.equal(500);
+				expect(result).to.have.property("message");
+			});
+		});
+
+		describe("failing to fetch the last page", function () {
+			var list;
+			var project;
+			var result;
+
+			before(function () {
+				project = new GitHubHelper.Project().succeed();
+				list    = new GitHubHelper.ContributorList(project, new Array(5)).fail(404, true);
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.contributorCount(project);
+				})
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					project.done();
+					list.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.an.instanceOf(Error);
+				expect(result).to.have.property("isBoom", true);
+				expect(result.output.statusCode).to.equal(500);
+				expect(result).to.have.property("message");
+			});
+		});
+	});
 });

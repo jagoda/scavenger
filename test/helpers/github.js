@@ -40,6 +40,67 @@ function generateProjectPayload () {
 	};
 }
 
+GitHub.ContributorList = function (project, contributors) {
+	var path = [
+		"", "repos", project.payload.owner.login, project.payload.name, "contributors"
+	].join("/");
+
+	contributors = contributors || [];
+
+	var page = contributors.slice(0, -1);
+	var end  = contributors.slice(-1);
+
+	var pageHeaders = {
+		link : Util.format("<%s%s?page=2>; rel=\"last\"", api, path)
+	};
+
+	var nocks = [];
+
+	this.payload = contributors;
+
+	this.done = function () {
+		nocks.forEach(function (nock) {
+			nock.done();
+		});
+		return this;
+	};
+
+	this.fail = function (code, second) {
+		if (second) {
+			nocks.push(
+				new Nock(api)
+				.matchHeader("user-agent", "request")
+				.get(path)
+				.reply(200, page, pageHeaders)
+			);
+		}
+
+		nocks.push(
+			new Nock(api)
+			.matchHeader("user-agent", "request")
+			.get(path + (second ? "?page=2" : ""))
+			.reply(code || 404)
+		);
+		return this;
+	};
+
+	this.succeed = function () {
+		nocks.push(
+			new Nock(api)
+			.matchHeader("user-agent", "request")
+			.get(path)
+			.reply(200, page, pageHeaders),
+
+			new Nock(api)
+			.matchHeader("user-agent", "request")
+			.get(path + "?page=2")
+			.reply(200, end)
+		);
+
+		return this;
+	};
+};
+
 GitHub.Project = function (token) {
 	var payload = generateProjectPayload();
 
