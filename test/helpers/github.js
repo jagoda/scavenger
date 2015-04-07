@@ -40,7 +40,7 @@ function generateProjectPayload () {
 	};
 }
 
-GitHub.ContributorList = function (project, contributors) {
+GitHub.ContributorList = function (project, contributors, paginate) {
 	var path = [
 		"", "repos", project.payload.owner.login, project.payload.name, "contributors"
 	].join("/");
@@ -65,8 +65,8 @@ GitHub.ContributorList = function (project, contributors) {
 		return this;
 	};
 
-	this.fail = function (code, second) {
-		if (second) {
+	this.fail = function (code) {
+		if (paginate) {
 			nocks.push(
 				new Nock(api)
 				.matchHeader("user-agent", "request")
@@ -78,24 +78,34 @@ GitHub.ContributorList = function (project, contributors) {
 		nocks.push(
 			new Nock(api)
 			.matchHeader("user-agent", "request")
-			.get(path + (second ? "?page=2" : ""))
+			.get(path + (paginate ? "?page=2" : ""))
 			.reply(code || 404)
 		);
 		return this;
 	};
 
 	this.succeed = function () {
-		nocks.push(
-			new Nock(api)
-			.matchHeader("user-agent", "request")
-			.get(path)
-			.reply(200, page, pageHeaders),
+		if (paginate) {
+			nocks.push(
+				new Nock(api)
+				.matchHeader("user-agent", "request")
+				.get(path)
+				.reply(200, page, pageHeaders),
 
-			new Nock(api)
-			.matchHeader("user-agent", "request")
-			.get(path + "?page=2")
-			.reply(200, end)
-		);
+				new Nock(api)
+				.matchHeader("user-agent", "request")
+				.get(path + "?page=2")
+				.reply(200, end)
+			);
+		}
+		else {
+			nocks.push(
+				new Nock(api)
+				.matchHeader("user-agent", "request")
+				.get(path)
+				.reply(200, contributors)
+			);
+		}
 
 		return this;
 	};

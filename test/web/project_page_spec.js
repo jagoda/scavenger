@@ -76,7 +76,7 @@ describe("A project page", function () {
 					"Stars: " + new Numeral(project.payload.stargazers_count).format(numberFormat),
 					"Forks: " + new Numeral(project.payload.forks_count).format(numberFormat),
 					"Contributors: " + new Numeral(contributors.payload.length),
-					"Watchers: " + new Numeral(project.payload.subscribers_count)
+					"Subscribers: " + new Numeral(project.payload.subscribers_count)
 						.format(numberFormat)
 				]
 			];

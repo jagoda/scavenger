@@ -252,7 +252,34 @@ describe("The GitHub service", function () {
 	});
 
 	describe("counting a project's contributors", function () {
-		describe("without an error", function () {
+		describe("with paginated results", function () {
+			var list;
+			var project;
+			var result;
+
+			before(function () {
+				project = new GitHubHelper.Project().succeed();
+				list    = new GitHubHelper.ContributorList(project, new Array(5), true).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.contributorCount(project);
+				})
+				.then(function (count) {
+					result = count;
+				})
+				.finally(function () {
+					project.done();
+					list.done();
+				});
+			});
+
+			it("returns the number of contributors to the project", function () {
+				expect(result).to.equal(list.payload.length);
+			});
+		});
+
+		describe("with a single page of results", function () {
 			var list;
 			var project;
 			var result;
@@ -316,7 +343,7 @@ describe("The GitHub service", function () {
 
 			before(function () {
 				project = new GitHubHelper.Project().succeed();
-				list    = new GitHubHelper.ContributorList(project, new Array(5)).fail(404, true);
+				list    = new GitHubHelper.ContributorList(project, new Array(5), true).fail(404);
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
