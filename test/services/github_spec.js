@@ -3,6 +3,7 @@ var Cache        = require("../../lib/services/url_cache");
 var Environment  = require("apparition").Environment;
 var GitHub       = require("../../lib/services/github");
 var GitHubHelper = require("../helpers/github");
+var Sinon        = require("sinon");
 
 var expect = require("chai").expect;
 
@@ -368,6 +369,16 @@ describe("The GitHub service", function () {
 	});
 
 	describe("computing the contribution split for a project", function () {
+		var clock;
+
+		before(function () {
+			clock = Sinon.useFakeTimers();
+		});
+
+		after(function () {
+			clock.restore();
+		});
+
 		describe("with paginated results", function () {
 			var result;
 
@@ -388,7 +399,10 @@ describe("The GitHub service", function () {
 							author : { login : "wambat" }
 						}
 					],
-					true
+					{
+						paginate   : true,
+						strictTime : true
+					}
 				)
 				.succeed();
 
@@ -429,7 +443,8 @@ describe("The GitHub service", function () {
 						{
 							author : { login : "wambat" }
 						}
-					]
+					],
+					{ strictTime : true }
 				)
 				.succeed();
 
@@ -457,7 +472,11 @@ describe("The GitHub service", function () {
 			before(function () {
 				var project = new GitHubHelper.Project().succeed();
 
-				var participation = new GitHubHelper.CommitHistory(project, [ {} ]).succeed();
+				var participation = new GitHubHelper.CommitHistory(
+					project,
+					[ {} ],
+					{ strictTime : true }
+				).succeed();
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
@@ -483,7 +502,11 @@ describe("The GitHub service", function () {
 			before(function () {
 				var project = new GitHubHelper.Project().succeed();
 
-				var participation = new GitHubHelper.CommitHistory(project).succeed();
+				var participation = new GitHubHelper.CommitHistory(
+					project,
+					null,
+					{ strictTime : true }
+				).succeed();
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
@@ -507,8 +530,13 @@ describe("The GitHub service", function () {
 			var result;
 
 			before(function () {
-				var project       = new GitHubHelper.Project().succeed();
-				var participation = new GitHubHelper.CommitHistory(project).fail(404);
+				var project = new GitHubHelper.Project().succeed();
+
+				var participation = new GitHubHelper.CommitHistory(
+					project,
+					null,
+					{ strictTime : true }
+				).fail(404);
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
@@ -535,7 +563,7 @@ describe("The GitHub service", function () {
 			var result;
 
 			before(function () {
-				var project       = new GitHubHelper.Project().succeed();
+				var project = new GitHubHelper.Project().succeed();
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {

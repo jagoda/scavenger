@@ -2,6 +2,8 @@
 var Nock = require("nock");
 var Util = require("util");
 
+var _ = require("lodash");
+
 var GitHub = module.exports;
 
 var api = "https://api.github.com";
@@ -46,20 +48,41 @@ function generateProjectPayload () {
 	};
 }
 
-GitHub.CommitHistory = function (project, history, paginate) {
+GitHub.CommitHistory = function (project, history, options) {
 	var nocks = [];
+	var since = encodeURIComponent(new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString());
 
 	var path  = [
-		"", "repos", project.payload.owner.login, project.payload.name, "commits"
+		"", "repos", project.payload.owner.login, project.payload.name, "commits?since=" + since
 	].join("/");
+
+	options = _.defaults(
+		options || {},
+		{
+			paginate   : false,
+			strictTime : false
+		}
+	);
 
 	function createLinks (index, length) {
 		var headers = {};
 
 		if (index < length -1) {
-			headers.link = Util.format("<%s%s?page=%d>; rel=\"next\"", api, path, index + 2);
+			headers.link = Util.format(
+				"<%s%s&page=%d>; rel=\"next\"", api, path, index + 2
+			);
 		}
 		return headers;
+	}
+
+	function timedNock (path) {
+		var nock = new Nock(api).matchHeader("user-agent", "request");
+
+		if (!options.strictTime) {
+			nock = nock.filteringPath(/since=[^&]+/, "since=" + since);
+		}
+
+		return nock.get(path);
 	}
 
 	history = history || [];
@@ -74,24 +97,24 @@ GitHub.CommitHistory = function (project, history, paginate) {
 	};
 
 	this.fail = function (code) {
-		if (paginate) {
-			nocks.push(createNock(path).reply(200, this.payload.slice(0, -1), createLinks(0, 2)));
+		if (options.paginate) {
+			nocks.push(timedNock(path).reply(200, this.payload.slice(0, -1), createLinks(0, 2)));
 		}
 
-		nocks.push(createNock(path + (paginate ? "?page=2" : "")).reply(code || 404));
+		nocks.push(timedNock(path + (options.paginate ? "&page=2" : "")).reply(code || 404));
 		return this;
 	};
 
 	this.succeed = function () {
-		if (paginate) {
+		if (options.paginate) {
 			nocks = nocks.concat(this.payload.map(function (commit, index, list) {
-				var url = path + (index ? "?page=" + (index + 1) : "");
+				var url = path + (index ? "&page=" + (index + 1) : "");
 
-				return createNock(url).reply(200, [ commit ], createLinks(index, list.length));
+				return timedNock(url).reply(200, [ commit ], createLinks(index, list.length));
 			}));
 		}
 		else {
-			nocks.push(createNock(path).reply(200, this.payload));
+			nocks.push(timedNock(path).reply(200, this.payload));
 		}
 
 		history.forEach(function (commit) {
