@@ -3,7 +3,6 @@ var Cache        = require("../../lib/services/cache");
 var Environment  = require("apparition").Environment;
 var GitHub       = require("../../lib/services/github");
 var GitHubHelper = require("../helpers/github");
-var Project      = require("../../lib/models/project");
 
 var expect = require("chai").expect;
 
@@ -41,14 +40,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("describes the project", function () {
-				expect(result).to.be.an.instanceOf(Project);
-				expect(result).to.have.property("description", project.payload.description);
-				expect(result).to.have.property("forks", project.payload.forks_count);
-				expect(result).to.have.property("language", project.payload.language);
-				expect(result).to.have.property("name", project.payload.name);
-				expect(result).to.have.property("owner", project.payload.owner.login);
-				expect(result).to.have.property("stargazers", project.payload.stargazers_count);
-				expect(result).to.have.property("watchers", project.payload.subscribers_count);
+				expect(result).to.deep.equal(project.payload);
 			});
 		});
 
@@ -167,7 +159,6 @@ describe("The GitHub service", function () {
 			it("returns a list of projects", function () {
 				expect(results).to.have.length(projects.length);
 				results.forEach(function (result, index) {
-					expect(result, index).to.be.an.instanceOf(Project);
 					expect(result, index).to.have.property("name", projects[index].payload.name);
 				});
 			});
