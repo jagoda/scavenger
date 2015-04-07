@@ -6,6 +6,12 @@ var GitHub = module.exports;
 
 var api = "https://api.github.com";
 
+function createNock (path) {
+	return new Nock(api)
+	.matchHeader("user-agent", "request")
+	.get(path);
+}
+
 function generateInteger () {
 	return Math.round(Math.random() * 10000) + 1000;
 }
@@ -68,18 +74,12 @@ GitHub.ContributorList = function (project, contributors, paginate) {
 	this.fail = function (code) {
 		if (paginate) {
 			nocks.push(
-				new Nock(api)
-				.matchHeader("user-agent", "request")
-				.get(path)
-				.reply(200, page, pageHeaders)
+				createNock(path).reply(200, page, pageHeaders)
 			);
 		}
 
 		nocks.push(
-			new Nock(api)
-			.matchHeader("user-agent", "request")
-			.get(path + (paginate ? "?page=2" : ""))
-			.reply(code || 404)
+			createNock(path + (paginate ? "?page=2" : "")).reply(code || 404)
 		);
 		return this;
 	};
@@ -87,23 +87,13 @@ GitHub.ContributorList = function (project, contributors, paginate) {
 	this.succeed = function () {
 		if (paginate) {
 			nocks.push(
-				new Nock(api)
-				.matchHeader("user-agent", "request")
-				.get(path)
-				.reply(200, page, pageHeaders),
-
-				new Nock(api)
-				.matchHeader("user-agent", "request")
-				.get(path + "?page=2")
-				.reply(200, end)
+				createNock(path).reply(200, page, pageHeaders),
+				createNock(path + "?page=2").reply(200, end)
 			);
 		}
 		else {
 			nocks.push(
-				new Nock(api)
-				.matchHeader("user-agent", "request")
-				.get(path)
-				.reply(200, contributors)
+				createNock(path).reply(200, contributors)
 			);
 		}
 
@@ -114,9 +104,7 @@ GitHub.ContributorList = function (project, contributors, paginate) {
 GitHub.Project = function (token) {
 	var payload = generateProjectPayload();
 
-	var nock = new Nock(api)
-	.matchHeader("user-agent", "request")
-	.get([ "", "repos", payload.owner.login, payload.name ].join("/"));
+	var nock = createNock([ "", "repos", payload.owner.login, payload.name ].join("/"));
 
 	if (token) {
 		nock.matchHeader("authorization", "Basic " +
@@ -156,9 +144,7 @@ GitHub.Search = function (projects, query) {
 		})
 	};
 
-	var nock = new Nock(api)
-	.matchHeader("user-agent", "request")
-	.get("/search/repositories?q=" + encodeURIComponent(query));
+	var nock = createNock("/search/repositories?q=" + encodeURIComponent(query));
 
 	this.payload = payload;
 
