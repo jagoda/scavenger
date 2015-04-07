@@ -366,4 +366,196 @@ describe("The GitHub service", function () {
 			});
 		});
 	});
+
+	describe("computing the contribution split for a project", function () {
+		describe("with paginated results", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+
+				var participation = new GitHubHelper.CommitHistory(
+					project,
+					[
+						{
+							author : { login : project.payload.owner.login }
+						},
+						{
+							author   : { login : "octocat" },
+							internal : true
+						},
+						{
+							author : { login : "wambat" }
+						}
+					],
+					true
+				)
+				.succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.participation(project);
+				})
+				.then(function (score) {
+					result = score;
+				})
+				.finally(function () {
+					project.done();
+					participation.done();
+				});
+			});
+
+			it("returns a number between 0 and 1", function () {
+				expect(result).to.equal(1 / 3);
+			});
+		});
+
+		describe("with a single page of results", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+
+				var participation = new GitHubHelper.CommitHistory(
+					project,
+					[
+						{
+							author : { login : project.payload.owner.login }
+						},
+						{
+							author   : { login : "octocat" },
+							internal : true
+						},
+						{
+							author : { login : "wambat" }
+						}
+					]
+				)
+				.succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.participation(project);
+				})
+				.then(function (score) {
+					result = score;
+				})
+				.finally(function () {
+					project.done();
+					participation.done();
+				});
+			});
+
+			it("returns a number between 0 and 1", function () {
+				expect(result).to.equal(1 / 3);
+			});
+		});
+
+		describe("with annonymous commits", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+
+				var participation = new GitHubHelper.CommitHistory(project, [ {} ]).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.participation(project);
+				})
+				.then(function (score) {
+					result = score;
+				})
+				.finally(function () {
+					project.done();
+					participation.done();
+				});
+			});
+
+			it("counts them as external commits", function () {
+				expect(result).to.equal(1);
+			});
+		});
+
+		describe("with no commits", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+
+				var participation = new GitHubHelper.CommitHistory(project).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.participation(project);
+				})
+				.then(function (score) {
+					result = score;
+				})
+				.finally(function () {
+					project.done();
+					participation.done();
+				});
+			});
+
+			it("returns 0", function () {
+				expect(result).to.equal(0);
+			});
+		});
+
+		describe("during a server error", function () {
+			var result;
+
+			before(function () {
+				var project       = new GitHubHelper.Project().succeed();
+				var participation = new GitHubHelper.CommitHistory(project).fail(404);
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.participation(project);
+				})
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					project.done();
+					participation.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.an.instanceOf(Error);
+				expect(result).to.have.property("isBoom", true);
+				expect(result.output.statusCode).to.equal(500);
+				expect(result).to.have.property("message");
+			});
+		});
+
+		describe("during a network error", function () {
+			var result;
+
+			before(function () {
+				var project       = new GitHubHelper.Project().succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					// Nock will block the request.
+					return github.participation(project);
+				})
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					project.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.an.instanceOf(Error);
+				expect(result).to.have.property("isBoom", true);
+				expect(result.output.statusCode).to.equal(500);
+				expect(result).to.have.property("message");
+			});
+		});
+	});
 });

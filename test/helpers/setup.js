@@ -12,7 +12,11 @@ before(function () {
 	expect(Scavenger.info.started, "server started").to.be.greaterThan(0);
 	Browser.site = Scavenger.info.uri;
 	Nock.enableNetConnect(Scavenger.info.host);
-	environment.set("disable_cache", true);
+
+	environment
+	.set("disable_cache", true)
+	.delete("github_token");
+
 	// Disable log output during tests.
 	Scavenger.plugins.good.monitor.stop();
 });

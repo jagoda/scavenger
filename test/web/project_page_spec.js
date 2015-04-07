@@ -26,10 +26,14 @@ describe("A project page", function () {
 		before(function () {
 			project      = new GitHub.Project().succeed();
 			contributors = new GitHub.ContributorList(project, new Array(5)).succeed();
+
+			var participation = new GitHub.CommitHistory(project).succeed();
+
 			return browser.visit(project.url())
 			.then(function () {
 				project.done();
 				contributors.done();
+				participation.done();
 			});
 		});
 
@@ -69,7 +73,9 @@ describe("A project page", function () {
 
 			var rows = [
 				[
-					"Contributors: " + new Numeral(contributors.payload.length),
+					"Split: 0.00%",
+					"Contributors: " + new Numeral(contributors.payload.length)
+						.format(numberFormat),
 					"Forks: " + new Numeral(project.payload.forks_count).format(numberFormat),
 					"Stars: " + new Numeral(project.payload.stargazers_count).format(numberFormat),
 					"Subscribers: " + new Numeral(project.payload.subscribers_count)
@@ -116,11 +122,13 @@ describe("A project page", function () {
 		before(function () {
 			project = new GitHub.Project().succeed();
 
-			var contributors = new GitHub.ContributorList(project, []).succeed();
+			var contributors  = new GitHub.ContributorList(project, []).succeed();
+			var participation = new GitHub.CommitHistory(project).succeed();
 
 			return browser.visit(project.url())
 			.then(function () {
 				contributors.done();
+				participation.done();
 				project.done();
 				return Bluebird.fromNode(function (callback) {
 					browser.click("h2 a:nth-of-type(1)", callback);

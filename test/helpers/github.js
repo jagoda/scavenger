@@ -46,6 +46,68 @@ function generateProjectPayload () {
 	};
 }
 
+GitHub.CommitHistory = function (project, history, paginate) {
+	var nocks = [];
+
+	var path  = [
+		"", "repos", project.payload.owner.login, project.payload.name, "commits"
+	].join("/");
+
+	function createLinks (index, length) {
+		var headers = {};
+
+		if (index < length -1) {
+			headers.link = Util.format("<%s%s?page=%d>; rel=\"next\"", api, path, index + 2);
+		}
+		return headers;
+	}
+
+	history = history || [];
+
+	this.payload = history;
+
+	this.done = function () {
+		nocks.forEach(function (nock) {
+			nock.done();
+		});
+		return this;
+	};
+
+	this.fail = function (code) {
+		if (paginate) {
+			nocks.push(createNock(path).reply(200, this.payload.slice(0, -1), createLinks(0, 2)));
+		}
+
+		nocks.push(createNock(path + (paginate ? "?page=2" : "")).reply(code || 404));
+		return this;
+	};
+
+	this.succeed = function () {
+		if (paginate) {
+			nocks = nocks.concat(this.payload.map(function (commit, index, list) {
+				var url = path + (index ? "?page=" + (index + 1) : "");
+
+				return createNock(url).reply(200, [ commit ], createLinks(index, list.length));
+			}));
+		}
+		else {
+			nocks.push(createNock(path).reply(200, this.payload));
+		}
+
+		history.forEach(function (commit) {
+			if (commit.author && commit.author.login !== project.payload.owner.login) {
+				var path = [
+					"", "orgs", project.payload.owner.login, "members", commit.author.login
+				].join("/");
+
+				nocks.push(createNock(path).reply(commit.internal ? 204 : 404));
+			}
+		});
+
+		return this;
+	};
+};
+
 GitHub.ContributorList = function (project, contributors, paginate) {
 	var path = [
 		"", "repos", project.payload.owner.login, project.payload.name, "contributors"
