@@ -1,17 +1,23 @@
 "use strict";
+var Bluebird    = require("bluebird");
 var Browser     = require("zombie");
 var Environment = require("apparition").Environment;
 var Nock        = require("nock");
 var Scavenger   = require("../../lib/server");
 
-var expect = require("chai").expect;
-
 var environment = new Environment();
 
 before(function () {
-	expect(Scavenger.info.started, "server started").to.be.greaterThan(0);
-	Browser.site = Scavenger.info.uri;
-	Nock.enableNetConnect(Scavenger.info.host);
+	var started;
+
+	if (Scavenger.info.started) {
+		started = Bluebird.resolve();
+	}
+	else {
+		started = new Bluebird(function (resolve) {
+			Scavenger.on("start", resolve);
+		});
+	}
 
 	environment
 	.set("disable_cache", true)
@@ -19,6 +25,10 @@ before(function () {
 
 	// Disable log output during tests.
 	Scavenger.plugins.good.monitor.stop();
+	return started.then(function () {
+		Browser.site = Scavenger.info.uri;
+		Nock.enableNetConnect(Scavenger.info.host);
+	});
 });
 
 after(function () {

@@ -1,5 +1,5 @@
 "use strict";
-var Cache        = require("../../lib/services/cache");
+var Cache        = require("../../lib/services/url_cache");
 var Environment  = require("apparition").Environment;
 var GitHub       = require("../../lib/services/github");
 var GitHubHelper = require("../helpers/github");

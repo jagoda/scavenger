@@ -1,17 +1,37 @@
 "use strict";
-var Cache       = require("../../lib/services/cache");
+var Bluebird    = require("bluebird");
+var UrlCache    = require("../../lib/services/url_cache");
 var Environment = require("apparition").Environment;
+var MongoDB     = require("mongodb");
 var Nock        = require("nock");
 
 var expect = require("chai").expect;
 
-describe("The cache service", function () {
-	var host    = "http://example.com";
-	var path    = "/some/path";
-	var payload = { key : "value" };
+Bluebird.promisifyAll(MongoDB);
+
+describe("The URL cache service", function () {
+	var environment = new Environment();
+	var host        = "http://example.com";
+	var path        = "/some/path";
+	var payload     = { key : "value" };
+
+	function dropDatabase () {
+		return MongoDB.connectAsync("mongodb://localhost:27017/test")
+		.then(function (db) {
+			return db.dropDatabase();
+		});
+	}
+
+	before(function () {
+		environment.set("url_cache_database", "test");
+	});
+
+	after(function () {
+		environment.restore();
+	});
 
 	describe("when not started", function () {
-		var cache = new Cache();
+		var cache = new UrlCache();
 		var result;
 
 		before(function () {
@@ -27,7 +47,7 @@ describe("The cache service", function () {
 	});
 
 	describe("when stopped", function () {
-		var cache = new Cache();
+		var cache = new UrlCache();
 		var result;
 
 		before(function () {
@@ -63,7 +83,7 @@ describe("The cache service", function () {
 
 		describe("retrieving a value", function () {
 			describe("with a successful response", function () {
-				var cache = new Cache();
+				var cache = new UrlCache();
 				var result;
 
 				before(function () {
@@ -84,6 +104,7 @@ describe("The cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
+					return dropDatabase();
 				});
 
 				it("returns the request results", function () {
@@ -112,7 +133,7 @@ describe("The cache service", function () {
 			});
 
 			describe("with an error response", function () {
-				var cache = new Cache();
+				var cache = new UrlCache();
 				var result;
 
 				before(function () {
@@ -133,6 +154,7 @@ describe("The cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
+					return dropDatabase();
 				});
 
 				it("returns the request results", function () {
@@ -166,7 +188,7 @@ describe("The cache service", function () {
 		});
 
 		describe("specifying additional headers", function () {
-			var cache = new Cache();
+			var cache = new UrlCache();
 
 			before(function () {
 				return cache.start();
@@ -174,6 +196,7 @@ describe("The cache service", function () {
 
 			after(function () {
 				cache.stop();
+				return dropDatabase();
 			});
 
 			it("sends the headers with the request", function () {
@@ -203,7 +226,7 @@ describe("The cache service", function () {
 
 		describe("retrieving a value", function () {
 			describe("with a successful response", function () {
-				var cache = new Cache();
+				var cache = new UrlCache();
 				var result;
 
 				before(function () {
@@ -224,6 +247,7 @@ describe("The cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
+					return dropDatabase();
 				});
 
 				it("returns the request results", function () {
@@ -255,7 +279,7 @@ describe("The cache service", function () {
 			});
 
 			describe("with an error response", function () {
-				var cache = new Cache();
+				var cache = new UrlCache();
 				var result;
 
 				before(function () {
@@ -276,6 +300,7 @@ describe("The cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
+					return dropDatabase();
 				});
 
 				it("returns the request results", function () {

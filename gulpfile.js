@@ -124,3 +124,12 @@ Gulp.task("test", [ "lint", "style" ], function (done) {
 
 	consume(stream);
 });
+
+// Mongodb (Catbox) does funny things with timers and doesn't clean them up...
+// This forces the process to ext.
+Gulp.on("err", function () {
+	process.exit(1);
+});
+Gulp.on("stop", function () {
+	process.exit(0);
+});
