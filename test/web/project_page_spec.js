@@ -64,18 +64,14 @@ describe("A project page", function () {
 		});
 
 		it("has a table of statistics", function () {
-			var heading = browser.query("h3");
-			expect(heading, "heading element").to.exist;
-			expect(heading.textContent, "heading text").to.equal("Overview");
-
-			var table = browser.query("h3+div.table");
+			var table = browser.query("div.table");
 			expect(table, "table element").to.exist;
 
 			var rows = [
 				[
-					"Stars: " + new Numeral(project.payload.stargazers_count).format(numberFormat),
-					"Forks: " + new Numeral(project.payload.forks_count).format(numberFormat),
 					"Contributors: " + new Numeral(contributors.payload.length),
+					"Forks: " + new Numeral(project.payload.forks_count).format(numberFormat),
+					"Stars: " + new Numeral(project.payload.stargazers_count).format(numberFormat),
 					"Subscribers: " + new Numeral(project.payload.subscribers_count)
 						.format(numberFormat)
 				]
