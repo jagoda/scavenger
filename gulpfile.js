@@ -51,7 +51,7 @@ function loadOptions (path) {
 
 function promisefy (stream) {
 	var promise = new Bluebird(function (resolve, reject) {
-		stream.once("finish", resolve);
+		stream.once("end", resolve);
 		stream.once("error", reject);
 	});
 
@@ -115,13 +115,14 @@ Gulp.task("test", [ "lint", "style" ], function (done) {
 	.on("finish", function () {
 		var stream = Gulp.src(paths.test)
 		.pipe(new Mocha())
+		// Stream errors are not propagated so test failures do not get reported
+		// correctly.
+		.once("error", done)
 		.pipe(Istanbul.writeReports())
-		.on("end", done)
-		.on("error", done);
-
+		.once("end", done)
+		.once("error", done);
 		consume(stream);
 	});
-
 	consume(stream);
 });
 

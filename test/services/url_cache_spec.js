@@ -23,7 +23,7 @@ describe("The URL cache service", function () {
 	}
 
 	before(function () {
-		environment.set("url_cache_database", "test");
+		environment.set("cache_database", "test");
 	});
 
 	after(function () {
