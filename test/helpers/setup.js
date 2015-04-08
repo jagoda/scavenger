@@ -1,6 +1,7 @@
 "use strict";
 var Bluebird    = require("bluebird");
 var Browser     = require("zombie");
+var Chai        = require("chai");
 var Environment = require("apparition").Environment;
 var MongoHelper = require("./mongo");
 var Nock        = require("nock");
@@ -15,6 +16,9 @@ environment
 // Need to configure the server before loading the module. This assumes
 // that this file is the first test file that is loaded...
 var Scavenger = require("../../lib/server");
+
+// Load the custom matchers.
+Chai.use(require("./matchers"));
 
 before(function () {
 	var started;

@@ -11,8 +11,6 @@ describe("The GitHub service", function () {
 	var cache  = new Cache();
 	var github = new GitHub(cache);
 
-	var serverError = /unexpected server error \(500\)/i;
-
 	before(function () {
 		// Need to start the cache for API compliance but the cache is disabled
 		// by the setup script.
@@ -85,11 +83,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message")
-				.that.is.a.match(serverError);
+				expect(result).to.be.a.serviceError;
 			});
 		});
 
@@ -105,10 +99,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message");
+				expect(result).to.be.a.serviceError;
 			});
 		});
 
@@ -201,11 +192,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message")
-				.that.is.a.match(serverError);
+				expect(result).to.be.a.serviceError;
 			});
 		});
 
@@ -221,10 +208,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message");
+				expect(result).to.be.a.serviceError;
 			});
 		});
 
@@ -330,10 +314,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message");
+				expect(result).to.be.a.serviceError;
 			});
 		});
 
@@ -360,10 +341,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message");
+				expect(result).to.be.a.serviceError;
 			});
 		});
 	});
@@ -552,10 +530,7 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message");
+				expect(result).to.be.a.serviceError;
 			});
 		});
 
@@ -579,10 +554,133 @@ describe("The GitHub service", function () {
 			});
 
 			it("fails", function () {
-				expect(result).to.be.an.instanceOf(Error);
-				expect(result).to.have.property("isBoom", true);
-				expect(result.output.statusCode).to.equal(500);
-				expect(result).to.have.property("message");
+				expect(result).to.be.a.serviceError;
+			});
+		});
+	});
+
+	describe("gathering an inventory of key files", function () {
+		describe("when the files are present", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+
+				var files = new GitHubHelper.Files(
+					project,
+					[
+						{
+							path     : "README.md",
+							html_url : "https://github.com/files/README.md"
+						},
+						{
+							path     : "CONTRIBUTING.md",
+							html_url : "https://github.com/files/CONTRIBUTING.md"
+						},
+						{
+							path     : "CHANGELOG.md",
+							html_url : "https://github.com/files/CHANGELOG.md"
+						},
+						{
+							path     : "foo.txt",
+							html_url : "https://github.com/files/foo.txt"
+						}
+					]
+				).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.files(project);
+				})
+				.then(function (files) {
+					result = files;
+				})
+				.finally(function () {
+					project.done();
+					files.done();
+				});
+			});
+
+			it("returns a populated file map", function () {
+				expect(result).to.deep.equal({
+					changelog    : "https://github.com/files/CHANGELOG.md",
+					contributing : "https://github.com/files/CONTRIBUTING.md",
+					readme       : "https://github.com/files/README.md"
+				});
+			});
+		});
+
+		describe("when the files are not present", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+				var files   = new GitHubHelper.Files(project).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.files(project);
+				})
+				.then(function (files) {
+					result = files;
+				})
+				.finally(function () {
+					project.done();
+					files.done();
+				});
+			});
+
+			it("returns an empty file map", function () {
+				expect(result).to.deep.equal({});
+			});
+		});
+
+		describe("during a server error", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+				var files   = new GitHubHelper.Files(project).fail();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.files(project);
+				})
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					project.done();
+					files.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.a.serviceError;
+			});
+		});
+
+		describe("during a network error", function () {
+			var result;
+
+			before(function () {
+				var project = new GitHubHelper.Project().succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					// Nock will block the request.
+					return github.files(project);
+				})
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					project.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.a.serviceError;
 			});
 		});
 	});

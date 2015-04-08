@@ -192,6 +192,33 @@ GitHub.ContributorList = function (project, contributors, paginate) {
 	};
 };
 
+GitHub.Files = function (project, files) {
+	var path = [
+		"", "repos", project.payload.owner.login, project.payload.name, "contents"
+	].join("/");
+
+	var nock;
+
+	files = files || [];
+
+	this.payload = files;
+
+	this.done = function () {
+		nock.done();
+		return this;
+	};
+
+	this.fail = function (code) {
+		nock = createNock(path).reply(code || 404);
+		return this;
+	};
+
+	this.succeed = function () {
+		nock = createNock(path).reply(200, this.payload);
+		return this;
+	};
+};
+
 GitHub.Project = function (token) {
 	var payload = generateProjectPayload();
 
