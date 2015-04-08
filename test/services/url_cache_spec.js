@@ -1,34 +1,29 @@
 "use strict";
-var Bluebird    = require("bluebird");
-var UrlCache    = require("../../lib/services/url_cache");
-var Environment = require("apparition").Environment;
-var MongoDB     = require("mongodb");
-var Nock        = require("nock");
+var Bluebird      = require("bluebird");
+var Catbox        = require("catbox");
+var Configuration = require("../../lib/services/configuration");
+var Environment   = require("apparition").Environment;
+var MongoDB       = require("mongodb");
+var Nock          = require("nock");
+var Sinon         = require("sinon");
+var UrlCache      = require("../../lib/services/url_cache");
 
 var expect = require("chai").expect;
 
 Bluebird.promisifyAll(MongoDB);
 
 describe("The URL cache service", function () {
-	var environment = new Environment();
-	var host        = "http://example.com";
-	var path        = "/some/path";
-	var payload     = { key : "value" };
+	var configuration = new Configuration();
+	var host          = "http://example.com";
+	var path          = "/some/path";
+	var payload       = { key : "value" };
 
 	function dropDatabase () {
-		return MongoDB.connectAsync("mongodb://localhost:27017/test")
+		return MongoDB.connectAsync(configuration.cache.database())
 		.then(function (db) {
 			return db.dropDatabase();
 		});
 	}
-
-	before(function () {
-		environment.set("cache_database", "test");
-	});
-
-	after(function () {
-		environment.restore();
-	});
 
 	describe("when not started", function () {
 		var cache = new UrlCache();
@@ -331,6 +326,34 @@ describe("The URL cache service", function () {
 					});
 				});
 			});
+		});
+	});
+
+	describe("using authentication", function () {
+		var cache       = new UrlCache();
+		var environment = new Environment();
+
+		before(function () {
+			Sinon.spy(Catbox, "Client");
+			environment.set("cache_database", "mongodb://foo:bar@localhost/test");
+
+			return cache.start()
+			.catch(function () {});
+		});
+
+		after(function () {
+			cache.stop();
+			Catbox.Client.restore();
+			environment.restore();
+		});
+
+		it("authenticates with the backend database", function () {
+			var options = Sinon.match({
+				username : "foo",
+				password : "bar"
+			});
+
+			expect(Catbox.Client.calledWith(Sinon.match.any, options)).to.be.true;
 		});
 	});
 });

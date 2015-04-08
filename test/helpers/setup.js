@@ -20,6 +20,7 @@ before(function () {
 	}
 
 	environment
+	.set("cache_database", "mongodb://localhost/test")
 	.set("disable_cache", true)
 	.delete("github_token");
 

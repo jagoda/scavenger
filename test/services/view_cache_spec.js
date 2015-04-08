@@ -1,18 +1,21 @@
 "use strict";
-var Bluebird    = require("bluebird");
-var Environment = require("apparition").Environment;
-var MongoDB     = require("mongodb");
-var ViewCache   = require("../../lib/services/view_cache");
+var Bluebird      = require("bluebird");
+var Catbox        = require("catbox");
+var Configuration = require("../../lib/services/configuration");
+var Environment   = require("apparition").Environment;
+var MongoDB       = require("mongodb");
+var Sinon         = require("sinon");
+var ViewCache     = require("../../lib/services/view_cache");
 
 var expect = require("chai").expect;
 
 Bluebird.promisifyAll(MongoDB);
 
 describe("The view cache service", function () {
-	var environment = new Environment();
+	var configuration = new Configuration();
 
 	function dropDatabase () {
-		MongoDB.connectAsync("mongodb://localhost/test")
+		MongoDB.connectAsync(configuration.cache.database())
 		.then(function (db) {
 			return db.dropDatabaseAsync().return(db);
 		})
@@ -20,14 +23,6 @@ describe("The view cache service", function () {
 			return db.closeAsync();
 		});
 	}
-
-	before(function () {
-		environment.set("cache_database", "test");
-	});
-
-	after(function () {
-		environment.restore();
-	});
 
 	describe("when not started", function () {
 		var cache = new ViewCache();
@@ -117,6 +112,34 @@ describe("The view cache service", function () {
 
 		it("returns the cached item", function () {
 			expect(result).to.equal(value);
+		});
+	});
+
+	describe("using authentication", function () {
+		var cache       = new ViewCache();
+		var environment = new Environment();
+
+		before(function () {
+			Sinon.spy(Catbox, "Client");
+			environment.set("cache_database", "mongodb://foo:bar@localhost/test");
+
+			return cache.start()
+			.catch(function () {});
+		});
+
+		after(function () {
+			cache.stop();
+			Catbox.Client.restore();
+			environment.restore();
+		});
+
+		it("authenticates with the backend database", function () {
+			var options = Sinon.match({
+				username : "foo",
+				password : "bar"
+			});
+
+			expect(Catbox.Client.calledWith(Sinon.match.any, options)).to.be.true;
 		});
 	});
 });
