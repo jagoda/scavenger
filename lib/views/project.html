@@ -4,19 +4,24 @@
 	<div class="table">
 		<div class="row">
 			<div class="col-md-2">
-				<span class="octicon octicon-pulse"></span> <strong>Split:</strong> {{# percentage project.participation }}{{/ percentage }}
+				<span class="octicon octicon-pulse"></span> <strong>Split:</strong>
+				{{# percentage project.participation }}{{/ percentage }}
 			</div>
 			<div class="col-md-2">
-				<span class="octicon octicon-octoface"></span> <strong>Contributors:</strong> {{# integer project.contributors_count }}{{/ integer }}
+				<span class="octicon octicon-octoface"></span> <strong>Contributors:</strong>
+				{{# integer project.contributors_count }}{{/ integer }}
 			</div>
 			<div class="col-md-2">
-				<span class="octicon octicon-repo-forked"></span> <strong>Forks:</strong> {{# integer project.forks_count }}{{/ integer }}
+				<span class="octicon octicon-repo-forked"></span> <strong>Forks:</strong>
+				{{# integer project.forks_count }}{{/ integer }}
 			</div>
 			<div class="col-md-2">
-				<span class="octicon octicon-star"></span> <strong>Stars:</strong> {{# integer project.stargazers_count }}{{/ integer }}
+				<span class="octicon octicon-star"></span> <strong>Stars:</strong>
+				{{# integer project.stargazers_count }}{{/ integer }}
 			</div>
 			<div class="col-md-2">
-				<span class="octicon octicon-eye"></span> <strong>Subscribers:</strong> {{# integer project.subscribers_count }}{{/ integer }}
+				<span class="octicon octicon-eye"></span> <strong>Subscribers:</strong>
+				{{# integer project.subscribers_count }}{{/ integer }}
 			</div>
 		</div>
 		<div class="row">
@@ -24,6 +29,18 @@
 				<span class="octicon octicon-file-text"></span> <strong>License:</strong>
 				{{ project.license.name }}
 				{{^ project.license.name }}Unknown{{/ project.license.name }}
+			</div>
+			<div class="col-md-2">
+				<span class="octicon octicon-book"></span> <strong>Readme:</strong>
+				{{# defined project.files.readme }}{{/ defined }}
+			</div>
+			<div class="col-md-2">
+				<span class="octicon octicon-repo-push"></span> <strong>Contributing:</strong>
+				{{# defined project.files.contributing }}{{/ defined }}
+			</div>
+			<div class="col-md-2">
+				<span class="octicon octicon-megaphone"></span> <strong>Changelog:</strong>
+				{{# defined project.files.changelog }}{{/ defined }}
 			</div>
 		</div>
 	</div>

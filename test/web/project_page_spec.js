@@ -6,6 +6,7 @@ var Layout   = require("../helpers/layout");
 var Numeral  = require("numeral");
 
 var expect = require("chai").expect;
+var _      = require("lodash");
 
 describe("A project page", function () {
 	var numberFormat = "0,0";
@@ -27,12 +28,31 @@ describe("A project page", function () {
 			project      = new GitHub.Project().succeed();
 			contributors = new GitHub.ContributorList(project, new Array(5)).succeed();
 
+			var files = new GitHub.Files(
+				project,
+				[
+					{
+						path     : "README.md",
+						html_url : "https://github.com"
+					},
+					{
+						path     : "CONTRIBUTING",
+						html_url : "https://github.com"
+					},
+					{
+						path     : "CHANGELOG",
+						html_url : "https://github.com"
+					}
+				]
+			).succeed();
+
 			var participation = new GitHub.CommitHistory(project).succeed();
 
 			return browser.visit(project.url())
 			.then(function () {
 				project.done();
 				contributors.done();
+				files.done();
 				participation.done();
 			});
 		});
@@ -82,7 +102,10 @@ describe("A project page", function () {
 						.format(numberFormat)
 				],
 				[
-					"License: MIT License"
+					"License: MIT License",
+					"Readme: Yes",
+					"Contributing: Yes",
+					"Changelog: Yes"
 				]
 			];
 
@@ -131,6 +154,7 @@ describe("A project page", function () {
 		before(function () {
 			var project       = new GitHub.Project();
 			var contributors  = new GitHub.ContributorList(project).succeed();
+			var files         = new GitHub.Files(project).succeed();
 			var participation = new GitHub.CommitHistory(project).succeed();
 
 			delete project.payload.license;
@@ -140,6 +164,7 @@ describe("A project page", function () {
 			.then(function () {
 				project.done();
 				contributors.done();
+				files.done();
 				participation.done();
 			});
 		});
@@ -150,6 +175,101 @@ describe("A project page", function () {
 		});
 	});
 
+	describe("missing", function () {
+		var files = [
+			{
+				path     : "README.md",
+				html_url : "http://example.com"
+			},
+			{
+				path     : "CONTRIBUTING.md",
+				html_url : "http://example.com"
+			},
+			{
+				path     : "CHANGELOG.md",
+				html_url : "http://example.com"
+			}
+		];
+
+		describe("the README file", function () {
+			var noReadme = _.reject(files, function (file) {
+				return /^README/.test(file.path);
+			});
+
+			before(function () {
+				var project       = new GitHub.Project().succeed();
+				var contributors  = new GitHub.ContributorList(project).succeed();
+				var files         = new GitHub.Files(project, noReadme).succeed();
+				var participation = new GitHub.CommitHistory(project).succeed();
+
+				return browser.visit(project.url())
+				.then(function () {
+					project.done();
+					contributors.done();
+					files.done();
+					participation.done();
+				});
+			});
+
+			it("uses 'No' for the Readme value", function () {
+				var readme = browser.query("div.row:nth-of-type(2) div:nth-of-type(2)");
+				expect(readme.textContent).to.match(/\s+No\s+$/);
+			});
+		});
+
+		describe("the CHANGELOG file", function () {
+			var noChangelog = _.reject(files, function (file) {
+				return /^CHANGELOG/.test(file.path);
+			});
+
+			before(function () {
+				var project       = new GitHub.Project().succeed();
+				var contributors  = new GitHub.ContributorList(project).succeed();
+				var files         = new GitHub.Files(project, noChangelog).succeed();
+				var participation = new GitHub.CommitHistory(project).succeed();
+
+				return browser.visit(project.url())
+				.then(function () {
+					project.done();
+					contributors.done();
+					files.done();
+					participation.done();
+				});
+			});
+
+			it("uses 'No' for the Changelog value", function () {
+				var changelog = browser.query("div.row:nth-of-type(2) div:nth-of-type(4)");
+				expect(changelog.textContent).to.match(/\s+No\s+$/);
+			});
+		});
+
+		describe("the CONTRIBUTING file", function () {
+			var noContributing = _.reject(files, function (file) {
+				return /^CONTRIBUTING/.test(file.path);
+			});
+
+			before(function () {
+				var project       = new GitHub.Project().succeed();
+				var contributors  = new GitHub.ContributorList(project).succeed();
+				var files         = new GitHub.Files(project, noContributing).succeed();
+				var participation = new GitHub.CommitHistory(project).succeed();
+
+				return browser.visit(project.url())
+				.then(function () {
+					project.done();
+					contributors.done();
+					files.done();
+					participation.done();
+				});
+			});
+
+			it("uses 'No' for the Contributing value", function () {
+				var contributing = browser.query("div.row:nth-of-type(2) div:nth-of-type(3)");
+				expect(contributing.textContent).to.match(/\s+No\s+$/);
+			});
+		});
+	});
+
 	describe("traversing the project link (name)", function () {
 		var project;
 
@@ -157,13 +277,16 @@ describe("A project page", function () {
 			project = new GitHub.Project().succeed();
 
 			var contributors  = new GitHub.ContributorList(project).succeed();
+			var files         = new GitHub.Files(project).succeed();
 			var participation = new GitHub.CommitHistory(project).succeed();
 
 			return browser.visit(project.url())
 			.then(function () {
 				contributors.done();
+				files.done();
 				participation.done();
 				project.done();
+
 				return Bluebird.fromNode(function (callback) {
 					browser.click("h2 a:nth-of-type(1)", callback);
 				})
