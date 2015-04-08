@@ -1,9 +1,9 @@
 "use strict";
 var Bluebird      = require("bluebird");
 var Catbox        = require("catbox");
-var Configuration = require("../../lib/services/configuration");
 var Environment   = require("apparition").Environment;
 var MongoDB       = require("mongodb");
+var MongoHelper   = require("../helpers/mongo");
 var Nock          = require("nock");
 var Sinon         = require("sinon");
 var UrlCache      = require("../../lib/services/url_cache");
@@ -13,17 +13,9 @@ var expect = require("chai").expect;
 Bluebird.promisifyAll(MongoDB);
 
 describe("The URL cache service", function () {
-	var configuration = new Configuration();
-	var host          = "http://example.com";
-	var path          = "/some/path";
-	var payload       = { key : "value" };
-
-	function dropDatabase () {
-		return MongoDB.connectAsync(configuration.cache.database())
-		.then(function (db) {
-			return db.dropDatabase();
-		});
-	}
+	var host    = "http://example.com";
+	var path    = "/some/path";
+	var payload = { key : "value" };
 
 	describe("when not started", function () {
 		var cache = new UrlCache();
@@ -99,7 +91,7 @@ describe("The URL cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
-					return dropDatabase();
+					return MongoHelper.dropDatabase();
 				});
 
 				it("returns the request results", function () {
@@ -149,7 +141,7 @@ describe("The URL cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
-					return dropDatabase();
+					return MongoHelper.dropDatabase();
 				});
 
 				it("returns the request results", function () {
@@ -191,7 +183,7 @@ describe("The URL cache service", function () {
 
 			after(function () {
 				cache.stop();
-				return dropDatabase();
+				return MongoHelper.dropDatabase();
 			});
 
 			it("sends the headers with the request", function () {
@@ -242,7 +234,7 @@ describe("The URL cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
-					return dropDatabase();
+					return MongoHelper.dropDatabase();
 				});
 
 				it("returns the request results", function () {
@@ -295,7 +287,7 @@ describe("The URL cache service", function () {
 				after(function () {
 					cache.stop();
 					Nock.cleanAll();
-					return dropDatabase();
+					return MongoHelper.dropDatabase();
 				});
 
 				it("returns the request results", function () {

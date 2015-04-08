@@ -96,6 +96,13 @@ describe("A project page", function () {
 				}
 			}
 		});
+
+		describe("fetched multiple times in quick succession", function () {
+			it("caches computed values", function () {
+				// This should error if a network request is made.
+				return browser.visit(project.url());
+			});
+		});
 	});
 
 	describe("for a project that does not exist", function () {

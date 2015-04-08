@@ -1,9 +1,9 @@
 "use strict";
 var Bluebird      = require("bluebird");
 var Catbox        = require("catbox");
-var Configuration = require("../../lib/services/configuration");
 var Environment   = require("apparition").Environment;
 var MongoDB       = require("mongodb");
+var MongoHelper   = require("../helpers/mongo");
 var Sinon         = require("sinon");
 var ViewCache     = require("../../lib/services/view_cache");
 
@@ -12,18 +12,6 @@ var expect = require("chai").expect;
 Bluebird.promisifyAll(MongoDB);
 
 describe("The view cache service", function () {
-	var configuration = new Configuration();
-
-	function dropDatabase () {
-		MongoDB.connectAsync(configuration.cache.database())
-		.then(function (db) {
-			return db.dropDatabaseAsync().return(db);
-		})
-		.then(function (db) {
-			return db.closeAsync();
-		});
-	}
-
 	describe("when not started", function () {
 		var cache = new ViewCache();
 		var result;
@@ -78,7 +66,7 @@ describe("The view cache service", function () {
 
 		after(function () {
 			cache.stop();
-			return dropDatabase();
+			return MongoHelper.dropDatabase();
 		});
 
 		it("returns 'null'", function () {
@@ -107,7 +95,7 @@ describe("The view cache service", function () {
 
 		after(function () {
 			cache.stop();
-			return dropDatabase();
+			return MongoHelper.dropDatabase();
 		});
 
 		it("returns the cached item", function () {

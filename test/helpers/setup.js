@@ -2,10 +2,19 @@
 var Bluebird    = require("bluebird");
 var Browser     = require("zombie");
 var Environment = require("apparition").Environment;
+var MongoHelper = require("./mongo");
 var Nock        = require("nock");
-var Scavenger   = require("../../lib/server");
 
 var environment = new Environment();
+
+environment
+.set("cache_database", "mongodb://localhost/test")
+.set("disable_cache", true)
+.delete("github_token");
+
+// Need to configure the server before loading the module. This assumes
+// that this file is the first test file that is loaded...
+var Scavenger = require("../../lib/server");
 
 before(function () {
 	var started;
@@ -19,11 +28,6 @@ before(function () {
 		});
 	}
 
-	environment
-	.set("cache_database", "mongodb://localhost/test")
-	.set("disable_cache", true)
-	.delete("github_token");
-
 	// Disable log output during tests.
 	Scavenger.plugins.good.monitor.stop();
 	return started.then(function () {
@@ -33,8 +37,14 @@ before(function () {
 });
 
 after(function () {
-	environment.restore();
 	// Server is started automatically. Need to stop it afterwards to allow the
 	// tests to exit.
-	return Scavenger.stopAsync();
+	return Scavenger.stopAsync()
+	.then(function () {
+		// Clean-up view cache.
+		return MongoHelper.dropDatabase();
+	})
+	.then(function () {
+		environment.restore();
+	});
 });
