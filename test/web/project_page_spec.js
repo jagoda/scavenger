@@ -80,18 +80,22 @@ describe("A project page", function () {
 					"Stars: " + new Numeral(project.payload.stargazers_count).format(numberFormat),
 					"Subscribers: " + new Numeral(project.payload.subscribers_count)
 						.format(numberFormat)
+				],
+				[
+					"License: MIT License"
 				]
 			];
 
+			var rowElements = table.querySelectorAll("div.row");
 			for (var i = 0; i < rows.length; i += 1) {
-				var row = table.querySelector("div.row:nth-of-type(" + i + 1 + ")");
+				var row = rowElements.item(i);
 				expect(row, "row " + i).to.exist;
 				var cells = row.querySelectorAll("div");
 				expect(cells, "cells " + i).to.have.length(rows[i].length);
 
 				for (var j = 0; j < rows[i].length; j += 1) {
 					var element = cells.item(j);
-					expect(element.textContent.trim(), i + "," + j)
+					expect(element.textContent.replace(/\s+/g, " ").trim(), i + "," + j)
 					.to.equal(rows[i][j]);
 				}
 			}
@@ -123,13 +127,36 @@ describe("A project page", function () {
 		});
 	});
 
+	describe("for a project with an unknown license", function () {
+		before(function () {
+			var project       = new GitHub.Project();
+			var contributors  = new GitHub.ContributorList(project).succeed();
+			var participation = new GitHub.CommitHistory(project).succeed();
+
+			delete project.payload.license;
+			project.succeed();
+
+			return browser.visit(project.url())
+			.then(function () {
+				project.done();
+				contributors.done();
+				participation.done();
+			});
+		});
+
+		it("uses 'Unknown' for the license value", function () {
+			var license = browser.query("div.row:nth-of-type(2) div:nth-of-type(1)");
+			expect(license.textContent).to.match(/\s+Unknown\s+$/);
+		});
+	});
+
 	describe("traversing the project link (name)", function () {
 		var project;
 
 		before(function () {
 			project = new GitHub.Project().succeed();
 
-			var contributors  = new GitHub.ContributorList(project, []).succeed();
+			var contributors  = new GitHub.ContributorList(project).succeed();
 			var participation = new GitHub.CommitHistory(project).succeed();
 
 			return browser.visit(project.url())

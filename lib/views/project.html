@@ -19,5 +19,12 @@
 				<span class="octicon octicon-eye"></span> <strong>Subscribers:</strong> {{# integer project.subscribers_count }}{{/ integer }}
 			</div>
 		</div>
+		<div class="row">
+			<div class="col-md-2">
+				<span class="octicon octicon-file-text"></span> <strong>License:</strong>
+				{{ project.license.name }}
+				{{^ project.license.name }}Unknown{{/ project.license.name }}
+			</div>
+		</div>
 	</div>
 {{> footer }}

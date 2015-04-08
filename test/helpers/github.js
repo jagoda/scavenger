@@ -10,6 +10,7 @@ var api = "https://api.github.com";
 
 function createNock (path) {
 	return new Nock(api)
+	.matchHeader("accept", "application/vnd.github.drax-preview+json")
 	.matchHeader("user-agent", "request")
 	.get(path);
 }
@@ -34,6 +35,11 @@ function generateString () {
 
 function generateProjectPayload () {
 	return {
+		license : {
+			key  : "mit",
+			name : "MIT License"
+		},
+
 		owner : {
 			login : generateString()
 		},
