@@ -136,8 +136,13 @@ describe("The NPM service", function () {
 			var result;
 
 			before(function () {
-				var project   = new GitHubHelper.Project().succeed();
-				var downloads = new NpmHelper.Downloads(project).succeed();
+				var project = new GitHubHelper.Project().succeed();
+
+				var downloads = new NpmHelper.Downloads(
+					project,
+					null,
+					{ noMatch : true }
+				).succeed();
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
@@ -153,7 +158,7 @@ describe("The NPM service", function () {
 			});
 
 			it("returns the number of downloads", function () {
-				expect(result).to.equal(42);
+				expect(result).to.equal(42000);
 			});
 		});
 
@@ -162,7 +167,15 @@ describe("The NPM service", function () {
 
 			before(function () {
 				var project   = new GitHubHelper.Project().succeed();
-				var downloads = new NpmHelper.Downloads(project, { invalid : true }).succeed();
+
+				var downloads = new NpmHelper.Downloads(
+					project,
+					null,
+					{
+						invalid : true,
+						noMatch : true
+					}
+				).succeed();
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
@@ -187,7 +200,7 @@ describe("The NPM service", function () {
 
 			before(function () {
 				var project   = new GitHubHelper.Project().succeed();
-				var downloads = new NpmHelper.Downloads(project).fail();
+				var downloads = new NpmHelper.Downloads(project, null, { noMatch : true }).fail();
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {

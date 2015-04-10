@@ -688,15 +688,10 @@ describe("The GitHub service", function () {
 
 	describe("getting the download count", function () {
 		describe("for an NPM project", function () {
-			var fileList = [
-				{ path : "package.json" }
-			];
-
 			var result;
 
 			before(function () {
 				var project   = new GitHubHelper.Project().succeed();
-				var files     = new GitHubHelper.Files(project, fileList).succeed();
 				var downloads = new NpmHelper.Downloads(project).succeed();
 
 				return github.project(project.payload.owner.login, project.payload.name)
@@ -709,12 +704,11 @@ describe("The GitHub service", function () {
 				.finally(function () {
 					project.done();
 					downloads.done();
-					files.done();
 				});
 			});
 
 			it("returns the download count from NPM", function () {
-				expect(result).to.equal(42);
+				expect(result).to.equal(42000);
 			});
 		});
 
@@ -722,8 +716,8 @@ describe("The GitHub service", function () {
 			var result;
 
 			before(function () {
-				var project   = new GitHubHelper.Project().succeed();
-				var files     = new GitHubHelper.Files(project).succeed();
+				var project = new GitHubHelper.Project().succeed();
+				var files   = new GitHubHelper.Files(project).succeed();
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
@@ -744,15 +738,10 @@ describe("The GitHub service", function () {
 		});
 
 		describe("with a service failure", function () {
-			var fileList = [
-				{ path : "package.json" }
-			];
-
 			var result;
 
 			before(function () {
 				var project   = new GitHubHelper.Project().succeed();
-				var files     = new GitHubHelper.Files(project, fileList).succeed();
 				var downloads = new NpmHelper.Downloads(project).fail();
 
 				return github.project(project.payload.owner.login, project.payload.name)
@@ -765,7 +754,6 @@ describe("The GitHub service", function () {
 				.finally(function () {
 					project.done();
 					downloads.done();
-					files.done();
 				});
 			});
 

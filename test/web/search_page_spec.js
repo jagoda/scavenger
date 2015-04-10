@@ -157,6 +157,7 @@ describe("The search page", function () {
 		before(function () {
 			project           = new GitHub.Project().succeed();
 			var contributors  = new GitHub.ContributorList(project).succeed();
+			var downloads     = new GitHub.Files(project).succeed();
 			var files         = new GitHub.Files(project).succeed();
 			var participation = new GitHub.CommitHistory(project).succeed();
 			var search        = new GitHub.Search([ project ], query).succeed();
@@ -169,6 +170,7 @@ describe("The search page", function () {
 			})
 			.then(function () {
 				contributors.done();
+				downloads.done();
 				files.done();
 				participation.done();
 				project.done();

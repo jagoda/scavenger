@@ -6,23 +6,27 @@ var Util   = require("util");
 
 var npmApi = "https://api.npmjs.org";
 
-Npm.Downloads = function (project, options) {
+Npm.Downloads = function (project, files, options) {
 	var nocks = [];
 
 	options = options || {};
 
-	var files = [
-		{
-			path         : "package.json",
-			download_url : Util.format(
-				"https://raw.githubusercontent.com/%s/%s/master/package.json",
-				project.payload.owner.login,
-				project.payload.name
-			)
-		}
-	];
+	files = files ||
+		[
+			{
+				path         : "package.json",
+				download_url : Util.format(
+					"https://raw.githubusercontent.com/%s/%s/master/package.json",
+					project.payload.owner.login,
+					project.payload.name
+				)
+			}
+		];
 
 	nocks.push(new GitHub.Files(project, files).succeed());
+	if (!options.noMatch) {
+		nocks.push(new GitHub.Files(project, files).succeed());
+	}
 
 	var manifest;
 	if (options.invalid) {
@@ -47,7 +51,7 @@ Npm.Downloads = function (project, options) {
 	var path = Util.format("/downloads/point/last-month/%s", project.payload.name);
 
 	this.payload = {
-		downloads : 42,
+		downloads : 42000,
 		"start"   : "2015-03-11",
 		"end"     : "2015-04-09",
 		"package" : project.payload.name
