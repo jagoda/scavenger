@@ -3,6 +3,7 @@ var Cache        = require("../../lib/services/url_cache");
 var Environment  = require("apparition").Environment;
 var GitHub       = require("../../lib/services/github");
 var GitHubHelper = require("../helpers/github");
+var NpmHelper    = require("../helpers/npm");
 var Sinon        = require("sinon");
 
 var expect = require("chai").expect;
@@ -676,6 +677,95 @@ describe("The GitHub service", function () {
 				})
 				.finally(function () {
 					project.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.a.serviceError;
+			});
+		});
+	});
+
+	describe("getting the download count", function () {
+		describe("for an NPM project", function () {
+			var fileList = [
+				{ path : "package.json" }
+			];
+
+			var result;
+
+			before(function () {
+				var project   = new GitHubHelper.Project().succeed();
+				var files     = new GitHubHelper.Files(project, fileList).succeed();
+				var downloads = new NpmHelper.Downloads(project).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.downloads(project);
+				})
+				.then(function (downloads) {
+					result = downloads;
+				})
+				.finally(function () {
+					project.done();
+					downloads.done();
+					files.done();
+				});
+			});
+
+			it("returns the download count from NPM", function () {
+				expect(result).to.equal(42);
+			});
+		});
+
+		describe("for an unknown project type", function () {
+			var result;
+
+			before(function () {
+				var project   = new GitHubHelper.Project().succeed();
+				var files     = new GitHubHelper.Files(project).succeed();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.downloads(project);
+				})
+				.then(function (downloads) {
+					result = downloads;
+				})
+				.finally(function () {
+					project.done();
+					files.done();
+				});
+			});
+
+			it("returns null", function () {
+				expect(result).to.be.null;
+			});
+		});
+
+		describe("with a service failure", function () {
+			var fileList = [
+				{ path : "package.json" }
+			];
+
+			var result;
+
+			before(function () {
+				var project   = new GitHubHelper.Project().succeed();
+				var files     = new GitHubHelper.Files(project, fileList).succeed();
+				var downloads = new NpmHelper.Downloads(project).fail();
+
+				return github.project(project.payload.owner.login, project.payload.name)
+				.then(function (project) {
+					return github.downloads(project);
+				})
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					project.done();
+					downloads.done();
+					files.done();
 				});
 			});
 
