@@ -1,0 +1,15 @@
+{{> header }}
+	<h2>
+		Hang Tight!
+		<span class="glyphicon glyphicon-refresh spin"></span>
+	</h2>
+	<p>We need a minute to crunch the latest numbers for you...</p>
+	<script>
+		setTimeout(
+			function () {
+				window.location.reload(true);
+			},
+			1000
+		);
+	</script>
+{{> footer }}

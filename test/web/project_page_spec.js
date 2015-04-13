@@ -49,98 +49,121 @@ describe("A project page", function () {
 		}
 
 		var contributors;
+		var downloads;
+		var files;
+		var participation;
 		var project;
 
 		before(function () {
 			project      = new GitHub.Project().succeed();
 			contributors = new GitHub.ContributorList(project, new Array(5)).succeed();
 
-			var downloads     = new Npm.Downloads(project, fileList(project)).succeed();
-			var files         = new GitHub.Files(project, fileList(project)).succeed();
-			var participation = new GitHub.CommitHistory(project).succeed();
+			downloads     = new Npm.Downloads(project, fileList(project)).succeed();
+			files         = new GitHub.Files(project, fileList(project)).succeed();
+			participation = new GitHub.CommitHistory(project).succeed();
 
-			return browser.visit(project.url())
-			.then(function () {
-				project.done();
-				contributors.done();
-				downloads.done();
-				files.done();
-				participation.done();
+			browser.visit(project.url());
+			return browser.wait({
+				function : function () {
+					return "Please Wait" === browser.text("title");
+				}
 			});
 		});
 
-		it("has a title", function () {
-			expect(browser.text("title"), "title").to.equal(project.payload.name + " - Scavenger");
+		it("initially shows a placeholder page", function () {
+			expect(browser.text("title")).to.equal("Please Wait");
+			expect(browser.text("h2")).to.equal("Hang Tight!");
+			expect(browser.text("p")).to.contain("need a minute");
 		});
 
-		it("has a navigation bar", function () {
-			Layout.verifyHeader(browser);
-		});
+		describe("after warming the cache", function () {
+			before(function () {
+				return browser.wait()
+				.then(function () {
+					project.done();
+					contributors.done();
+					downloads.done();
+					files.done();
+					participation.done();
+				});
+			});
 
-		it("has a footer", function () {
-			Layout.verifyFooter(browser);
-		});
+			it("has a title", function () {
+				expect(browser.text("title"), "title")
+				.to.equal(project.payload.name + " - Scavenger");
+			});
 
-		it("has a heading", function () {
-			var heading = browser.query("h2");
-			expect(heading, "heading element").to.exist;
-			expect(heading.textContent.trim(), "heading text")
-			.to.equal(project.payload.owner.login + "/" + project.payload.name);
+			it("has a navigation bar", function () {
+				Layout.verifyHeader(browser);
+			});
 
-			var projectLink = heading.querySelector("a:nth-of-type(1)");
-			expect(projectLink, "project element").to.exist;
-			expect(projectLink.getAttribute("href"), "project href").to.equal(project.githubUrl());
+			it("has a footer", function () {
+				Layout.verifyFooter(browser);
+			});
 
-			var octicon = projectLink.querySelector("span.mega-octicon.octicon-mark-github");
-			expect(octicon, "GitHub icon").to.exist;
-		});
+			it("has a heading", function () {
+				var heading = browser.query("h2");
+				expect(heading, "heading element").to.exist;
+				expect(heading.textContent.trim(), "heading text")
+				.to.equal(project.payload.owner.login + "/" + project.payload.name);
 
-		it("includes the project description", function () {
-			browser.assert.text("h2+p", project.payload.description);
-		});
+				var projectLink = heading.querySelector("a:nth-of-type(1)");
+				expect(projectLink, "project element").to.exist;
+				expect(projectLink.getAttribute("href"), "project href")
+				.to.equal(project.githubUrl());
 
-		it("has a table of statistics", function () {
-			var table = browser.query("div.table");
-			expect(table, "table element").to.exist;
+				var octicon = projectLink.querySelector("span.mega-octicon.octicon-mark-github");
+				expect(octicon, "GitHub icon").to.exist;
+			});
 
-			var rows = [
-				[
-					"Split: 0.00%",
-					"Contributors: " + new Numeral(contributors.payload.length)
-						.format(numberFormat),
-					"Forks: " + new Numeral(project.payload.forks_count).format(numberFormat),
-					"Stars: " + new Numeral(project.payload.stargazers_count).format(numberFormat),
-					"Subscribers: " + new Numeral(project.payload.subscribers_count)
-						.format(numberFormat)
-				],
-				[
-					"Downloads: " + new Numeral(42000).format(numberFormat),
-					"License: MIT License",
-					"Readme: Yes",
-					"Contributing: Yes",
-					"Changelog: Yes"
-				]
-			];
+			it("includes the project description", function () {
+				browser.assert.text("h2+p", project.payload.description);
+			});
 
-			var rowElements = table.querySelectorAll("div.row");
-			for (var i = 0; i < rows.length; i += 1) {
-				var row = rowElements.item(i);
-				expect(row, "row " + i).to.exist;
-				var cells = row.querySelectorAll("div");
-				expect(cells, "cells " + i).to.have.length(rows[i].length);
+			it("has a table of statistics", function () {
+				var table = browser.query("div.table");
+				expect(table, "table element").to.exist;
 
-				for (var j = 0; j < rows[i].length; j += 1) {
-					var element = cells.item(j);
-					expect(element.textContent.replace(/\s+/g, " ").trim(), i + "," + j)
-					.to.equal(rows[i][j]);
+				var rows = [
+					[
+						"Split: 0.00%",
+						"Contributors: " + new Numeral(contributors.payload.length)
+							.format(numberFormat),
+						"Forks: " + new Numeral(project.payload.forks_count).format(numberFormat),
+						"Stars: " + new Numeral(project.payload.stargazers_count)
+							.format(numberFormat),
+						"Subscribers: " + new Numeral(project.payload.subscribers_count)
+							.format(numberFormat)
+					],
+					[
+						"Downloads: " + new Numeral(42000).format(numberFormat),
+						"License: MIT License",
+						"Readme: Yes",
+						"Contributing: Yes",
+						"Changelog: Yes"
+					]
+				];
+
+				var rowElements = table.querySelectorAll("div.row");
+				for (var i = 0; i < rows.length; i += 1) {
+					var row = rowElements.item(i);
+					expect(row, "row " + i).to.exist;
+					var cells = row.querySelectorAll("div");
+					expect(cells, "cells " + i).to.have.length(rows[i].length);
+
+					for (var j = 0; j < rows[i].length; j += 1) {
+						var element = cells.item(j);
+						expect(element.textContent.replace(/\s+/g, " ").trim(), i + "," + j)
+						.to.equal(rows[i][j]);
+					}
 				}
-			}
-		});
+			});
 
-		describe("fetched multiple times in quick succession", function () {
-			it("caches computed values", function () {
-				// This should error if a network request is made.
-				return browser.visit(project.url());
+			describe("fetched multiple times in quick succession", function () {
+				it("caches computed values", function () {
+					// This should error if a network request is made.
+					return browser.visit(project.url());
+				});
 			});
 		});
 	});
@@ -160,6 +183,24 @@ describe("A project page", function () {
 
 		it("shows an error page", function () {
 			Layout.errorPage(browser, 404);
+		});
+	});
+
+	describe("during an intermittent failure", function () {
+		before(function () {
+			var project = new GitHub.Project().succeed();
+			return Bluebird.fromNode(function (callback) {
+				browser.visit(project.url(), callback);
+			})
+			// Ignore errors.
+			.catch(function () {})
+			.then(function () {
+				project.done();
+			});
+		});
+
+		it("shows an error page", function () {
+			Layout.errorPage(browser, 500);
 		});
 	});
 
