@@ -762,4 +762,95 @@ describe("The GitHub service", function () {
 			});
 		});
 	});
+
+	describe("getting an organization", function () {
+		describe("that exists", function () {
+			var organization;
+			var results;
+
+			before(function () {
+				organization = new GitHubHelper.Organization().succeed();
+
+				return github.organization(organization.payload.name)
+				.then(function (organization) {
+					results = organization;
+				})
+				.finally(function () {
+					organization.done();
+				});
+			});
+
+			it("returns a list of projects belonging to the organization", function () {
+				expect(results).to.have.length(2);
+				results.forEach(function (project) {
+					expect(project).to.have.property("owner")
+					.with.property("login", organization.payload.name);
+
+					expect(project).to.have.property("license");
+					expect(project).to.have.property("name");
+					expect(project).to.have.property("stargazers_count");
+				});
+			});
+		});
+
+		describe("that does not exist", function () {
+			var result;
+
+			before(function () {
+				var organization = new GitHubHelper.Organization().fail();
+
+				return github.organization(organization.payload.name)
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					organization.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.an.instanceOf(Error);
+				expect(result).to.have.property("isBoom", true);
+				expect(result.output.statusCode).to.equal(404);
+				expect(result).to.have.property("message")
+				.that.is.a.match(/organization '[^']+' does not exist/i);
+			});
+		});
+
+		describe("with a server error", function () {
+			var result;
+
+			before(function () {
+				var organization = new GitHubHelper.Organization().fail(500);
+
+				return github.organization(organization.payload.name)
+				.catch(function (error) {
+					result = error;
+				})
+				.finally(function () {
+					organization.done();
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.a.serviceError;
+			});
+		});
+
+		describe("with a network error", function () {
+			var result;
+
+			before(function () {
+				// Nock will block the request.
+				return github.organization("foo")
+				.catch(function (error) {
+					result = error;
+				});
+			});
+
+			it("fails", function () {
+				expect(result).to.be.a.serviceError;
+			});
+		});
+	});
 });
