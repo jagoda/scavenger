@@ -18,7 +18,7 @@ describe("The error page", function () {
 
 	describe("for an invalid URL", function () {
 		before(function (done) {
-			browser.visit("/foobar", function () {
+			browser.visit("/some/fake/path", function () {
 				// Ignore errors.
 				done();
 			});

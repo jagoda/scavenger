@@ -33,7 +33,7 @@ function generateString () {
 	return buffer.toString();
 }
 
-function generateProjectPayload () {
+function generateProjectPayload (owner) {
 	return {
 		license : {
 			key  : "mit",
@@ -41,7 +41,7 @@ function generateProjectPayload () {
 		},
 
 		owner : {
-			login : generateString()
+			login : owner || generateString()
 		},
 
 		description       : generateString(),
@@ -219,8 +219,44 @@ GitHub.Files = function (project, files) {
 	};
 };
 
-GitHub.Project = function (token) {
-	var payload = generateProjectPayload();
+GitHub.Organization = function () {
+	var name = generateString();
+	var nock = createNock([ "", "users", name, "repos" ].join("/"));
+
+	this.projects = [
+		new GitHub.Project(null, name),
+		new GitHub.Project(null, name)
+	];
+
+	this.payload      = _.pluck(this.projects, "payload");
+	this.payload.name = name;
+
+	this.done = function () {
+		nock.done();
+		return this;
+	};
+
+	this.fail = function (code) {
+		nock = nock.reply(code || 404);
+		return this;
+	};
+
+	this.githubUrl = function () {
+		return Util.format("https://github.com/%s", name);
+	};
+
+	this.succeed = function () {
+		nock = nock.reply(200, this.payload);
+		return this;
+	};
+
+	this.url = function () {
+		return Util.format("/%s", name);
+	};
+};
+
+GitHub.Project = function (token, owner) {
+	var payload = generateProjectPayload(owner);
 
 	var nock = createNock([ "", "repos", payload.owner.login, payload.name ].join("/"));
 

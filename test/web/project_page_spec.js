@@ -176,7 +176,7 @@ describe("A project page", function () {
 			})
 			// Ignore errors.
 			.catch(function () {})
-			.then(function () {
+			.finally(function () {
 				project.done();
 			});
 		});

@@ -151,7 +151,7 @@ describe("The layout helper", function () {
 	describe("detecting an error page", function () {
 		describe("when on an error page", function () {
 			before(function (done) {
-				browser.visit("/foo", function () {
+				browser.visit("/some/fake/path", function () {
 					// Ignore errors.
 					done();
 				});
@@ -164,7 +164,7 @@ describe("The layout helper", function () {
 
 		describe("when on a different error page", function () {
 			before(function (done) {
-				browser.visit("/foo", function () {
+				browser.visit("/some/fake/path", function () {
 					// Ignore errors.
 					done();
 				});

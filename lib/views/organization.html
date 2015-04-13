@@ -1,0 +1,41 @@
+{{> header }}
+	<h2>
+		<a href="https://github.com/{{ name }}">
+			{{ name }} <span class="mega-octicon octicon-mark-github"></span>
+		</a>
+	</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th><span title="Project" class="octicon octicon-mark-github"></span></th>
+				<th><span title="Split" class="octicon octicon-pulse"></span></th>
+				<th><span title="Downloads" class="octicon octicon-cloud-download"></span></th>
+				<th><span title="License" class="octicon octicon-file-text"></span></th>
+				<th><span title="Readme" class="octicon octicon-book"></span></th>
+				<th><span title="Contributing" class="octicon octicon-repo-push"></span></th>
+				<th><span title="Changelog" class="octicon octicon-megaphone"></span></th>
+				<th><span title="Contributors" class="octicon octicon-octoface"></span></th>
+				<th><span title="Forks" class="octicon octicon-repo-forked"></span></th>
+				<th><span title="Stars" class="octicon octicon-star"></span></th>
+				<th><span title="Subscribers" class="octicon octicon-eye"></span></th>
+			</tr>
+		</thead>
+		<tbody>
+		{{# projects }}
+			<tr>
+				<td><a title="Project" href="/{{ ../name }}/{{ name }}">{{ name }}</a></td>
+				<td><span title="Split">{{# percentage pparticipation }}{{/ percentage }}</span></td>
+				<td><span title="Downloads">{{# integer downloads }}{{/ integer }}</span></td>
+				<td><span title="License">{{ license.name }}</span></td>
+				<td><span title="Readme">{{# defined files.readme }}{{/ defined }}</span></td>
+				<td><span title="Contributing">{{# defined files.contributing }}{{/ defined }}</span></td>
+				<td><span title="Changelog">{{# defined files.changelog }}{{/ defined }}</span></td>
+				<td><span title="Contributors">{{# integer contributors_count }}{{/ integer }}</span></td>
+				<td><span title="Forks">{{# integer forks_count }}{{/ integer }}</span></td>
+				<td><span title="Stars">{{# integer stargazers_count }}{{/ integer }}</span></td>
+				<td><span title="Subscribers">{{# integer subscribers_count }}{{/ integer }}</span></td>
+			</tr>
+		{{/ projects }}
+		</tbody>
+	</table>
+{{> footer }}
