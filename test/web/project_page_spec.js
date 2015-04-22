@@ -204,8 +204,10 @@ describe("A project page", function () {
 			});
 		});
 
-		it("shows an error page", function () {
-			Layout.errorPage(browser, 500);
+		// FIXME: This assumes that the request will eventually succeed. This
+		// should perhaps be rethought...
+		it("shows the placeholder page", function () {
+			expect(browser.text("title")).to.equal("Please Wait");
 		});
 	});
 
