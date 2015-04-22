@@ -281,6 +281,10 @@ GitHub.Project = function (token, owner) {
 		return Util.format("https://github.com/%s/%s", payload.owner.login, payload.name);
 	};
 
+	this.orgUrl = function () {
+		return Util.format("/%s", payload.owner.login);
+	};
+
 	this.succeed = function () {
 		nock = nock.reply(200, payload);
 		return this;

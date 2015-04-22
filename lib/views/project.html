@@ -1,5 +1,7 @@
 {{> header }}
-	<h2>{{ project.owner.login }}/<a href="https://github.com/{{ project.owner.login }}/{{ project.name }}">{{ project.name }} <span class="mega-octicon octicon-mark-github"></span></a></h2>
+	<h2>
+		<a href="/{{ project.owner.login }}">{{ project.owner.login }}</a>/<a href="https://github.com/{{ project.owner.login }}/{{ project.name }}">{{ project.name }} <span class="mega-octicon octicon-mark-github"></span></a>
+	</h2>
 	<p class="text-muted">{{ project.description }}</p>
 	<div class="table">
 		<div class="row">

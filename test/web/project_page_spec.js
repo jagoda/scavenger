@@ -107,7 +107,12 @@ describe("A project page", function () {
 				expect(heading.textContent.trim(), "heading text")
 				.to.equal(project.payload.owner.login + "/" + project.payload.name);
 
-				var projectLink = heading.querySelector("a:nth-of-type(1)");
+				var orgLink = heading.querySelector("a:nth-of-type(1)");
+				expect(orgLink, "org element").to.exist;
+				expect(orgLink.getAttribute("href"), "org href")
+				.to.equal(project.orgUrl());
+
+				var projectLink = heading.querySelector("a:nth-of-type(2)");
 				expect(projectLink, "project element").to.exist;
 				expect(projectLink.getAttribute("href"), "project href")
 				.to.equal(project.githubUrl());
@@ -359,7 +364,7 @@ describe("A project page", function () {
 		});
 	});
 
-	describe("traversing the project link (name)", function () {
+	describe("traversing the project link (org)", function () {
 		var project;
 
 		before(function () {
@@ -380,6 +385,38 @@ describe("A project page", function () {
 
 				return Bluebird.fromNode(function (callback) {
 					browser.click("h2 a:nth-of-type(1)", callback);
+				})
+				// Ignore errors.
+				.catch(function () {});
+			});
+		});
+
+		it("redirects to the organization page", function () {
+			browser.assert.url(project.orgUrl());
+		});
+	});
+
+	describe("traversing the project link (name)", function () {
+		var project;
+
+		before(function () {
+			project = new GitHub.Project().succeed();
+
+			var contributors  = new GitHub.ContributorList(project).succeed();
+			var downloads     = new GitHub.Files(project).succeed();
+			var files         = new GitHub.Files(project).succeed();
+			var participation = new GitHub.CommitHistory(project).succeed();
+
+			return browser.visit(project.url())
+			.then(function () {
+				contributors.done();
+				downloads.done();
+				files.done();
+				participation.done();
+				project.done();
+
+				return Bluebird.fromNode(function (callback) {
+					browser.click("h2 a:nth-of-type(2)", callback);
 				})
 				// Ignore errors.
 				.catch(function () {});
