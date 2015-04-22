@@ -219,9 +219,10 @@ GitHub.Files = function (project, files) {
 	};
 };
 
-GitHub.Organization = function () {
-	var name = generateString();
-	var nock = createNock([ "", "users", name, "repos" ].join("/"));
+GitHub.Organization = function (paginate) {
+	var name  = generateString();
+	var nocks = [];
+	var path  = [ "", "users", name, "repos" ].join("/");
 
 	this.projects = [
 		new GitHub.Project(null, name),
@@ -231,13 +232,24 @@ GitHub.Organization = function () {
 	this.payload      = _.pluck(this.projects, "payload");
 	this.payload.name = name;
 
+	var first = this.payload.slice(0, -1);
+	var last  = this.payload.slice(-1);
+
+	var pageHeaders = {
+		link : Util.format("<%s%s?page=2>; rel=\"next\"", api, path)
+	};
+
 	this.done = function () {
-		nock.done();
+		nocks.forEach(function (nock) {
+			nock.done();
+		});
 		return this;
 	};
 
 	this.fail = function (code) {
-		nock = nock.reply(code || 404);
+		nocks.push(
+			createNock(path).reply(code || 404)
+		);
 		return this;
 	};
 
@@ -246,7 +258,17 @@ GitHub.Organization = function () {
 	};
 
 	this.succeed = function () {
-		nock = nock.reply(200, this.payload);
+		if (paginate) {
+			nocks.push(
+				createNock(path).reply(200, first, pageHeaders),
+				createNock(path + "?page=2").reply(200, last)
+			);
+		}
+		else {
+			nocks.push(
+				createNock(path).reply(200, this.payload)
+			);
+		}
 		return this;
 	};
 

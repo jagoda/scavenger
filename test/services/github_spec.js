@@ -515,7 +515,7 @@ describe("The GitHub service", function () {
 					project,
 					null,
 					{ strictTime : true }
-				).fail(404);
+				).fail(500);
 
 				return github.project(project.payload.owner.login, project.payload.name)
 				.then(function (project) {
@@ -764,7 +764,36 @@ describe("The GitHub service", function () {
 	});
 
 	describe("getting an organization", function () {
-		describe("that exists", function () {
+		describe("with a paginated list of projects", function () {
+			var organization;
+			var results;
+
+			before(function () {
+				organization = new GitHubHelper.Organization(true).succeed();
+
+				return github.organization(organization.payload.name)
+				.then(function (organization) {
+					results = organization;
+				})
+				.finally(function () {
+					organization.done();
+				});
+			});
+
+			it("returns a list of projects belonging to the organization", function () {
+				expect(results).to.have.length(2);
+				results.forEach(function (project) {
+					expect(project).to.have.property("owner")
+					.with.property("login", organization.payload.name);
+
+					expect(project).to.have.property("license");
+					expect(project).to.have.property("name");
+					expect(project).to.have.property("stargazers_count");
+				});
+			});
+		});
+
+		describe("with a single page of projects", function () {
 			var organization;
 			var results;
 
